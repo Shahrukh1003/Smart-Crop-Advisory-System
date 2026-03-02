@@ -1,0 +1,4 @@
+# file: C:\Users\shahr\AppData\Roaming\Python\Python311\site-packages\parso\pgen2\generator.py
+# hypothesis_version: 6.148.3
+
+['    %s -> %d', '    -> %d', '  State', '"', '"""', '%s(%s)', '%s(%s, %s)', "'", "'''", '(final)', '<%s: %s is_final=%s>', 'DFAState', 'Dump of DFA for', 'Dump of NFA for', 'ReservedString', '_TokenTypeT']

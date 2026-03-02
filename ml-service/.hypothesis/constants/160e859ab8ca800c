@@ -1,0 +1,4 @@
+# file: C:\Users\shahr\OneDrive\Desktop\Smart crop advisory\ml-service\validation.py
+# hypothesis_version: 6.148.3
+
+[-180, 180, 1024, 4096, 'JPEG', 'JPG', 'PNG', 'alluvial', 'black', 'chalk', 'clay', 'crop_recommendation', 'empty_image', 'error', 'field', 'guidance', 'image', 'image_too_large', 'image_too_small', 'invalid_image', 'invalid_image_format', 'invalid_latitude', 'invalid_longitude', 'invalid_nitrogen', 'invalid_ph', 'invalid_phosphorus', 'invalid_potassium', 'invalid_soil_type', 'loamy', 'location.latitude', 'location.longitude', 'message', 'peat', 'pest_detection', 'red', 'sandy', 'silt', 'soil_data.nitrogen', 'soil_data.ph', 'soil_data.phosphorus', 'soil_data.potassium', 'soil_data.type']

@@ -1,0 +1,154 @@
+version: '3.8'
+
+# =============================================================================
+# Smart Crop Advisory System - Development Docker Compose
+# =============================================================================
+# Usage: docker-compose up -d
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # PostgreSQL Database
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:14-alpine
+    container_name: smart-crop-db
+    environment:
+      POSTGRES_DB: smart_crop_advisory
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d smart_crop_advisory"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - smart-crop-network
+
+  # ---------------------------------------------------------------------------
+  # Redis Cache
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: smart-crop-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - smart-crop-network
+
+  # ---------------------------------------------------------------------------
+  # NestJS Backend
+  # ---------------------------------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: smart-crop-backend
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/smart_crop_advisory?schema=public
+      JWT_SECRET: dev-secret-key-change-in-production
+      JWT_EXPIRES_IN: 24h
+      JWT_REFRESH_SECRET: dev-refresh-secret-key
+      JWT_REFRESH_EXPIRES_IN: 30d
+      ML_SERVICE_URL: http://ml-service:8000
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ""
+      OPENWEATHERMAP_API_KEY: ${OPENWEATHERMAP_API_KEY:-your-api-key}
+      OPENWEATHERMAP_API_URL: https://api.openweathermap.org/data/2.5
+      MARKET_PRICE_API_URL: https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070
+      MARKET_PRICE_API_KEY: ${MARKET_PRICE_API_KEY:-your-api-key}
+      GOOGLE_CLOUD_PROJECT_ID: ${GOOGLE_CLOUD_PROJECT_ID:-your-project-id}
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID:-your-firebase-project}
+      THROTTLE_TTL: 60000
+      THROTTLE_LIMIT: 100
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - ./backend/uploads:/app/uploads
+      - ./credentials:/app/credentials:ro
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    command: npm run start:dev
+    networks:
+      - smart-crop-network
+
+  # ---------------------------------------------------------------------------
+  # ML Service (FastAPI)
+  # ---------------------------------------------------------------------------
+  ml-service:
+    build:
+      context: ./ml-service
+      dockerfile: Dockerfile
+    container_name: smart-crop-ml
+    ports:
+      - "8000:8000"
+    environment:
+      ENVIRONMENT: development
+      SERVICE_HOST: 0.0.0.0
+      SERVICE_PORT: 8000
+      MODEL_DIR: /app/models
+      CROP_MODEL_PATH: /app/models/crop_recommendation_model.pkl
+      PEST_MODEL_PATH: /app/models/pest_detection_model.tflite
+      MIN_CONFIDENCE_THRESHOLD: 0.5
+      FALLBACK_ENABLED: "true"
+      LOG_LEVEL: INFO
+    volumes:
+      - ./ml-service:/app
+      - ml_models:/app/models
+      - /app/__pycache__
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - smart-crop-network
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  ml_models:
+    driver: local
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  smart-crop-network:
+    driver: bridge

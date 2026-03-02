@@ -1,0 +1,4 @@
+# file: C:\Users\shahr\OneDrive\Desktop\Smart crop advisory\ml-service\config.py
+# hypothesis_version: 6.148.3
+
+[0.5, '.env', '1.0.0', 'ML_', 'models']

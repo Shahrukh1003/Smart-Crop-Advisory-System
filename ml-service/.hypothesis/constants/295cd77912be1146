@@ -1,0 +1,4 @@
+# file: C:\Users\shahr\AppData\Roaming\Python\Python311\site-packages\jedi\inference\context.py
+# hypothesis_version: 6.148.3
+
+['%s(%s)', ':', 'argument', 'classdef', 'comp_for', 'dictorsetmaker', 'for_stmt', 'funcdef', 'if_stmt', 'lambdef', 'name-error', 'param', 'sync_comp_for', 'testlist_comp']

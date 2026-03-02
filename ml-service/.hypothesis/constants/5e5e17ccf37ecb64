@@ -1,0 +1,4 @@
+# file: C:\Users\shahr\OneDrive\Desktop\Smart crop advisory\ml-service\schemas.py
+# hypothesis_version: 6.148.3
+
+[0.0, 1.0, -180, 100, 180, 'Height', 'Width', 'X coordinate', 'Y coordinate', 'alluvial', 'black', 'chalk', 'clay', 'high', 'loamy', 'low', 'medium', 'peat', 'red', 'sandy', 'silt', 'type']

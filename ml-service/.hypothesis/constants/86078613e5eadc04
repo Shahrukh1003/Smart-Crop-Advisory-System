@@ -1,0 +1,4 @@
+# file: C:\Users\shahr\AppData\Roaming\Python\Python311\site-packages\jedi\inference\value\klass.py
+# hypothesis_version: 6.148.3
+
+['Type[%s]', '__', '__init__', 'class', 'function', 'metaclass', 'object', 'property', 'type']

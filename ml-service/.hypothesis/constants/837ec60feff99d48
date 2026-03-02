@@ -1,0 +1,4 @@
+# file: C:\Users\shahr\AppData\Roaming\Python\Python311\site-packages\parso\parser.py
+# hypothesis_version: 6.148.3
+
+['%s(%s, %s)', 'file_input', 'incomplete input', 'too much input']

@@ -1,0 +1,4 @@
+# Model directory - place trained models here
+# Supported models:
+# - pest_detection_model.h5 (MobileNetV2 for pest detection)
+# - crop_recommendation_model.pkl (Ensemble model for crop recommendations)

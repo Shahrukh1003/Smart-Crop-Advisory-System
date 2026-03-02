@@ -1,0 +1,4 @@
+# file: C:\Users\shahr\AppData\Roaming\Python\Python311\site-packages\prompt_toolkit\history.py
+# hypothesis_version: 6.148.3
+
+[0.5, '+', 'DummyHistory', 'FileHistory', 'History', 'InMemoryHistory', 'ThreadedHistory', 'ab', 'os.PathLike[bytes]', 'os.PathLike[str]', 'rb', 'replace', 'utf-8']

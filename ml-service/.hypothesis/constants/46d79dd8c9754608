@@ -1,0 +1,4 @@
+# file: C:\Users\shahr\AppData\Roaming\Python\Python311\site-packages\jedi\api\strings.py
+# hypothesis_version: 6.148.3
+
+[')', '[', ']', 'atom', 'dict', 'name', 'string', 'trailer', '}']

@@ -1,0 +1,122 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build outputs
+dist/
+build/
+*.apk
+*.ipa
+*.aab
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+.env.production
+backend/.env.production
+
+# Credentials (NEVER commit these)
+credentials/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+logs/
+*.log
+
+# Testing
+coverage/
+.nyc_output/
+.pytest_cache/
+
+# ML Models (binary files)
+*.h5
+*.pkl
+*.joblib
+*.onnx
+ml-service/models/*.tflite
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Docker
+.dockerignore
+
+# Redis
+dump.rdb
+
+# =====================================================
+# Exclude unnecessary .md files (info/docs only)
+# =====================================================
+APP_WALKTHROUGH.md
+DATASET_USAGE_REPORT.md
+DEPLOYMENT.md
+FEATURES_OVERVIEW.md
+FINAL_STATUS_REPORT.md
+FIX_NETWORK_ERROR.md
+HOW_TO_TEST.md
+IEEE_CONFERENCE_PAPER.md
+LITERATURE_REVIEW_ANALYSIS.md
+LOGIN_NOW.md
+NEXT_STEPS_TO_LOGIN.md
+OPEN_APP_NOW.md
+PRODUCTION_CHECKLIST.md
+PRODUCTION_READINESS_AUDIT.md
+PROJECT_PLAN_IEEE.md
+PROJECT_REPORT.md
+PROJECT_RUNNING_STATUS.md
+PROJECT_SCOPE_UPDATED.md
+QUICK_REFERENCE.md
+QUICK_START.md
+README_TESTING.md
+SCAS-walkthrough.md
+SETUP.md
+SOLUTION_COMPLETE.md
+START_HERE.md
+START_TESTING_NOW.md
+SYSTEM_STARTUP_GUIDE.md
+TESTING_GUIDE.md
+TESTING_INDEX.md
+TESTING_SUMMARY.md
+TEST_EXECUTION_REPORT.md
+TEST_RESULTS.md
+VIEW_APP_NOW.md
+
+# Exclude non-code folders
+patent/
+.kiro/
+
+# Exclude test/utility scripts at root
+TEST_SCRIPT.ps1
+test_api.ps1

@@ -1,0 +1,4 @@
+# file: C:\Users\shahr\AppData\Roaming\Python\Python311\site-packages\parso\pgen2\grammar_parser.py
+# hypothesis_version: 6.148.3
+
+['(', ')', '*', '+', '3.9', ':', '<%s: %s>', '<%s: from %s>', '<grammar>', 'NFAState', '[', ']', 'expected %s, got %s', '|']

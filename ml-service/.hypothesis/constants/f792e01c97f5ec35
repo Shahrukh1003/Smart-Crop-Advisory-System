@@ -1,0 +1,4 @@
+# file: C:\Users\shahr\AppData\Roaming\Python\Python311\site-packages\prompt_toolkit\key_binding\bindings\focus.py
+# hypothesis_version: 6.148.3
+
+['focus_next', 'focus_previous']

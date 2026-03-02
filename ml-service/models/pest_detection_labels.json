@@ -1,0 +1,29 @@
+{
+  "class_indices": {
+    "aphids": 0,
+    "bacterial_spot": 1,
+    "early_blight": 2,
+    "healthy": 3,
+    "late_blight": 4,
+    "leaf_blight": 5,
+    "leaf_curl": 6,
+    "mosaic_virus": 7,
+    "powdery_mildew": 8,
+    "rust": 9,
+    "stem_borer": 10
+  },
+  "index_to_class": {
+    "0": "aphids",
+    "1": "bacterial_spot",
+    "2": "early_blight",
+    "3": "healthy",
+    "4": "late_blight",
+    "5": "leaf_blight",
+    "6": "leaf_curl",
+    "7": "mosaic_virus",
+    "8": "powdery_mildew",
+    "9": "rust",
+    "10": "stem_borer"
+  },
+  "num_classes": 11
+}

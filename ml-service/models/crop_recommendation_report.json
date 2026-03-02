@@ -1,0 +1,105 @@
+{
+  "chickpea": {
+    "precision": 0.5945945945945946,
+    "recall": 0.55,
+    "f1-score": 0.5714285714285714,
+    "support": 40.0
+  },
+  "cotton": {
+    "precision": 0.8780487804878049,
+    "recall": 0.9,
+    "f1-score": 0.8888888888888888,
+    "support": 40.0
+  },
+  "groundnut": {
+    "precision": 0.7692307692307693,
+    "recall": 0.75,
+    "f1-score": 0.759493670886076,
+    "support": 40.0
+  },
+  "lentil": {
+    "precision": 0.6666666666666666,
+    "recall": 0.7,
+    "f1-score": 0.6829268292682927,
+    "support": 40.0
+  },
+  "maize": {
+    "precision": 0.7857142857142857,
+    "recall": 0.825,
+    "f1-score": 0.8048780487804879,
+    "support": 40.0
+  },
+  "millet": {
+    "precision": 0.9743589743589743,
+    "recall": 0.95,
+    "f1-score": 0.9620253164556962,
+    "support": 40.0
+  },
+  "mustard": {
+    "precision": 0.8333333333333334,
+    "recall": 0.875,
+    "f1-score": 0.8536585365853658,
+    "support": 40.0
+  },
+  "onion": {
+    "precision": 0.8,
+    "recall": 0.8,
+    "f1-score": 0.8,
+    "support": 40.0
+  },
+  "potato": {
+    "precision": 0.9743589743589743,
+    "recall": 0.95,
+    "f1-score": 0.9620253164556962,
+    "support": 40.0
+  },
+  "rice": {
+    "precision": 0.9487179487179487,
+    "recall": 0.925,
+    "f1-score": 0.9367088607594937,
+    "support": 40.0
+  },
+  "soybean": {
+    "precision": 0.8095238095238095,
+    "recall": 0.85,
+    "f1-score": 0.8292682926829268,
+    "support": 40.0
+  },
+  "sugarcane": {
+    "precision": 0.95,
+    "recall": 0.95,
+    "f1-score": 0.95,
+    "support": 40.0
+  },
+  "sunflower": {
+    "precision": 0.65,
+    "recall": 0.65,
+    "f1-score": 0.65,
+    "support": 40.0
+  },
+  "tomato": {
+    "precision": 0.9230769230769231,
+    "recall": 0.9,
+    "f1-score": 0.9113924050632911,
+    "support": 40.0
+  },
+  "wheat": {
+    "precision": 0.9743589743589743,
+    "recall": 0.95,
+    "f1-score": 0.9620253164556962,
+    "support": 40.0
+  },
+  "accuracy": 0.835,
+  "macro avg": {
+    "precision": 0.8354656022948707,
+    "recall": 0.8350000000000001,
+    "f1-score": 0.8349813369140322,
+    "support": 600.0
+  },
+  "weighted avg": {
+    "precision": 0.8354656022948704,
+    "recall": 0.835,
+    "f1-score": 0.8349813369140322,
+    "support": 600.0
+  }
+}

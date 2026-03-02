@@ -1,0 +1,66 @@
+{
+  "feature_columns": [
+    "N",
+    "P",
+    "K",
+    "temperature",
+    "humidity",
+    "ph",
+    "rainfall"
+  ],
+  "classes": [
+    "chickpea",
+    "cotton",
+    "groundnut",
+    "lentil",
+    "maize",
+    "millet",
+    "mustard",
+    "onion",
+    "potato",
+    "rice",
+    "soybean",
+    "sugarcane",
+    "sunflower",
+    "tomato",
+    "wheat"
+  ],
+  "num_classes": 15,
+  "model_type": "VotingClassifier(RandomForest + GradientBoosting)",
+  "training_config": {
+    "random_forest": {
+      "n_estimators": 100,
+      "max_depth": 15,
+      "min_samples_split": 5,
+      "min_samples_leaf": 2,
+      "random_state": 42,
+      "n_jobs": -1
+    },
+    "gradient_boosting": {
+      "n_estimators": 100,
+      "max_depth": 8,
+      "learning_rate": 0.1,
+      "min_samples_split": 5,
+      "min_samples_leaf": 2,
+      "random_state": 42
+    },
+    "cv_folds": 5,
+    "test_size": 0.2
+  },
+  "metrics": {
+    "test_accuracy": 0.835,
+    "rf_cv_accuracy": 0.8245833333333333,
+    "gb_cv_accuracy": 0.8016666666666667,
+    "ensemble_cv_accuracy": 0.8079166666666667,
+    "feature_importance": {
+      "N": 0.21132677793959467,
+      "P": 0.12467142593997334,
+      "K": 0.1693092242290732,
+      "temperature": 0.1305620809140151,
+      "humidity": 0.09335721546791785,
+      "ph": 0.08681203343864066,
+      "rainfall": 0.18396124207078515
+    }
+  },
+  "trained_at": "2025-12-09T21:58:56.253930"
+}

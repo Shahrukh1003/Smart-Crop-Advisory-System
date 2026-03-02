@@ -1,0 +1,4 @@
+# file: C:\Users\shahr\OneDrive\Desktop\Smart crop advisory\ml-service\services\pest_detection_service.py
+# hypothesis_version: 6.148.3
+
+[1e-06, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.7, 1.0, 255.0, 224, 1000, 'As needed', 'Baking Soda Solution', 'Carbofuran Granules', 'Copper Fungicide', 'Dust or spray', 'Every 7-10 days', 'Every 7-14 days', 'Field release', 'Foliar spray', 'Insecticidal Soap', 'Manual removal', 'Neem Oil Spray', 'RGB', 'Soil application', 'Sulfur Fungicide', 'Trichogramma Release', 'Weekly', 'aphids', 'fallback', 'healthy', 'leaf_blight', 'low', 'medium', 'pest_detection', 'powdery_mildew', 'rule-based-1.0.0', 'severity_threshold', 'stem_borer', 'treatments']

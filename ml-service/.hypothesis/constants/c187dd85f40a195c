@@ -1,0 +1,4 @@
+# file: C:\Users\shahr\AppData\Roaming\Python\Python311\site-packages\jedi\inference\gradual\stub_value.py
+# hypothesis_version: 6.148.3
+
+['_', '__', 'dotted_as_name', 'import_as_name', 'import_from', 'import_name']

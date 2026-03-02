@@ -1,0 +1,4 @@
+# file: C:\Users\shahr\AppData\Roaming\Python\Python311\site-packages\jedi\inference\compiled\getattr_static.py
+# hypothesis_version: 6.148.3
+
+['__delete__', '__dict__', '__get__', '__mro__', '__set__']

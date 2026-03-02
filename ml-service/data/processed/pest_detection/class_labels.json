@@ -1,0 +1,16 @@
+{
+  "classes": [
+    "aphids",
+    "leaf_blight",
+    "powdery_mildew",
+    "stem_borer",
+    "bacterial_spot",
+    "early_blight",
+    "late_blight",
+    "leaf_curl",
+    "mosaic_virus",
+    "rust",
+    "healthy"
+  ],
+  "num_classes": 11
+}
