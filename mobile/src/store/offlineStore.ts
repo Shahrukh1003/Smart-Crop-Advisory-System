@@ -130,12 +130,12 @@ interface OfflineState {
   getCachedWeather: (location?: { latitude: number; longitude: number }) => Promise<CachedData<WeatherCacheEntry> | null>;
   cacheMarketPrices: (data: MarketPriceCacheEntry, commodity?: string) => Promise<void>;
   getCachedMarketPrices: (commodity?: string) => Promise<CachedData<MarketPriceCacheEntry> | null>;
-  
+
   // Activity logging
   cacheActivity: (activity: Omit<ActivityEntry, 'id' | 'timestamp' | 'syncStatus'>) => Promise<void>;
   getCachedActivities: () => Promise<CachedData<ActivityEntry[]> | null>;
   updateActivitySyncStatus: (id: string, status: ActivityEntry['syncStatus']) => Promise<void>;
-  
+
   // Freshness helpers
   isCacheStale: (timestamp: number, ttl: number) => boolean;
   getCacheFreshnessInfo: (timestamp: number, ttl: number) => { isStale: boolean; ageMs: number; ageText: string };
@@ -218,11 +218,29 @@ export const useOfflineStore = create<OfflineState>((set, get) => ({
     for (const item of pendingItems) {
       try {
         await get().updateSyncItemStatus(item.id, 'syncing');
-        
-        // In production, make API call here based on entityType and operation
-        // Simulating API call
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
+
+        // Real API call based on entityType and operation
+        const { api } = await import('../services/api');
+        const ENTITY_ENDPOINTS: Record<string, string> = {
+          activity: '/activities',
+          crop_history: '/crop-history',
+          pest_detection: '/pest-detection/analyze',
+          feedback: '/feedback',
+        };
+        const endpoint = ENTITY_ENDPOINTS[item.entityType] || `/${item.entityType}`;
+
+        switch (item.operation) {
+          case 'create':
+            await api.post(endpoint, item.entityData);
+            break;
+          case 'update':
+            await api.put(`${endpoint}/${item.entityData.id}`, item.entityData);
+            break;
+          case 'delete':
+            await api.delete(`${endpoint}/${item.entityData.id}`);
+            break;
+        }
+
         await get().updateSyncItemStatus(item.id, 'completed');
         await get().removeFromSyncQueue(item.id);
       } catch (error) {
@@ -253,7 +271,7 @@ export const useOfflineStore = create<OfflineState>((set, get) => ({
       if (!stored) return null;
 
       const cached: CachedData<T> = JSON.parse(stored);
-      
+
       // Determine TTL based on key type if not provided
       let effectiveTtl = ttl;
       if (!effectiveTtl) {
@@ -292,14 +310,14 @@ export const useOfflineStore = create<OfflineState>((set, get) => ({
   },
 
   cacheWeather: async (data: WeatherCacheEntry, location?: { latitude: number; longitude: number }) => {
-    const key = location 
+    const key = location
       ? `${CACHE_KEYS.WEATHER}_${location.latitude.toFixed(2)}_${location.longitude.toFixed(2)}`
       : CACHE_KEYS.WEATHER;
     await get().cacheData(key, data, { location, version: '1.0' });
   },
 
   getCachedWeather: async (location?: { latitude: number; longitude: number }) => {
-    const key = location 
+    const key = location
       ? `${CACHE_KEYS.WEATHER}_${location.latitude.toFixed(2)}_${location.longitude.toFixed(2)}`
       : CACHE_KEYS.WEATHER;
     return get().getCachedData<WeatherCacheEntry>(key, CACHE_TTL.WEATHER_FORECAST);
@@ -307,9 +325,9 @@ export const useOfflineStore = create<OfflineState>((set, get) => ({
 
   cacheMarketPrices: async (data: MarketPriceCacheEntry, commodity?: string) => {
     const key = commodity ? `${CACHE_KEYS.MARKET_PRICES}_${commodity}` : CACHE_KEYS.MARKET_PRICES;
-    await get().cacheData(key, data, { 
+    await get().cacheData(key, data, {
       location: data.location,
-      version: '1.0' 
+      version: '1.0'
     });
   },
 
@@ -367,7 +385,7 @@ export const useOfflineStore = create<OfflineState>((set, get) => ({
   getCacheFreshnessInfo: (timestamp: number, ttl: number) => {
     const ageMs = Date.now() - timestamp;
     const isStale = ageMs > ttl;
-    
+
     // Generate human-readable age text
     const ageMinutes = Math.floor(ageMs / (1000 * 60));
     const ageHours = Math.floor(ageMs / (1000 * 60 * 60));

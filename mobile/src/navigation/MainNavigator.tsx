@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
@@ -39,26 +39,26 @@ const MainTabs: React.FC = () => {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
-          let emoji: string;
+          let iconName: keyof typeof Ionicons.glyphMap;
 
           switch (route.name) {
             case 'Dashboard':
-              emoji = '🏠';
+              iconName = focused ? 'home' : 'home-outline';
               break;
             case 'Advisory':
-              emoji = '🌾';
+              iconName = focused ? 'leaf' : 'leaf-outline';
               break;
             case 'Market':
-              emoji = '💰';
+              iconName = focused ? 'trending-up' : 'trending-up-outline';
               break;
             case 'Profile':
-              emoji = '👤';
+              iconName = focused ? 'person' : 'person-outline';
               break;
             default:
-              emoji = '❓';
+              iconName = 'help-circle-outline';
           }
 
-          return <Text style={{ fontSize: focused ? 28 : 24 }}>{emoji}</Text>;
+          return <Ionicons name={iconName} size={size} color={color} />;
         },
         tabBarActiveTintColor: '#2E7D32',
         tabBarInactiveTintColor: 'gray',
@@ -80,23 +80,23 @@ const MainTabs: React.FC = () => {
         },
       })}
     >
-      <Tab.Screen 
-        name="Dashboard" 
+      <Tab.Screen
+        name="Dashboard"
         component={DashboardScreen}
         options={{ title: 'Home', headerShown: false }}
       />
-      <Tab.Screen 
-        name="Advisory" 
+      <Tab.Screen
+        name="Advisory"
         component={AdvisoryScreen}
         options={{ title: 'Crop Advisory' }}
       />
-      <Tab.Screen 
-        name="Market" 
+      <Tab.Screen
+        name="Market"
         component={MarketScreen}
         options={{ title: 'Market Prices' }}
       />
-      <Tab.Screen 
-        name="Profile" 
+      <Tab.Screen
+        name="Profile"
         component={ProfileScreen}
         options={{ title: 'Profile' }}
       />
@@ -117,38 +117,38 @@ export const MainNavigator: React.FC = () => {
         },
       }}
     >
-      <Stack.Screen 
-        name="MainTabs" 
+      <Stack.Screen
+        name="MainTabs"
         component={MainTabs}
         options={{ headerShown: false }}
       />
-      <Stack.Screen 
-        name="Weather" 
+      <Stack.Screen
+        name="Weather"
         component={WeatherScreen}
         options={{ title: 'Weather Forecast' }}
       />
-      <Stack.Screen 
-        name="CropAdvisory" 
+      <Stack.Screen
+        name="CropAdvisory"
         component={CropAdvisoryScreen}
         options={{ title: 'Crop Advisory' }}
       />
-      <Stack.Screen 
-        name="PestDetection" 
+      <Stack.Screen
+        name="PestDetection"
         component={PestDetectionScreen}
         options={{ title: 'Pest Detection' }}
       />
-      <Stack.Screen 
-        name="MarketPrices" 
+      <Stack.Screen
+        name="MarketPrices"
         component={MarketPricesScreen}
         options={{ title: 'Market Prices' }}
       />
-      <Stack.Screen 
-        name="SoilAnalysis" 
+      <Stack.Screen
+        name="SoilAnalysis"
         component={SoilAnalysisScreen}
         options={{ title: 'Soil Analysis' }}
       />
-      <Stack.Screen 
-        name="CropHistory" 
+      <Stack.Screen
+        name="CropHistory"
         component={CropHistoryScreen}
         options={{ title: 'Crop History' }}
       />

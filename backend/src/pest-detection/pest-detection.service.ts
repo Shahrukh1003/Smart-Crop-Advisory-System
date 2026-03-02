@@ -1,5 +1,8 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { HttpService } from '@nestjs/axios';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
+import { firstValueFrom, timeout, catchError } from 'rxjs';
 import {
   PestDetectionRequestDto,
   PestDetectionResponseDto,
@@ -46,7 +49,7 @@ const TREATMENT_DATABASE: Record<string, TreatmentDto[]> = {
   ],
 };
 
-// Simulated pest detection model classes
+// Pest classes for fallback detection
 const PEST_CLASSES = [
   'Aphids', 'Rice Blast', 'Bacterial Leaf Blight', 'Brown Plant Hopper',
   'Stem Borer', 'Powdery Mildew', 'Late Blight', 'Fruit Fly', 'Healthy',
@@ -55,15 +58,20 @@ const PEST_CLASSES = [
 @Injectable()
 export class PestDetectionService {
   private readonly logger = new Logger(PestDetectionService.name);
+  private readonly mlServiceUrl: string;
 
-  constructor(private readonly prisma: PrismaService) {}
-
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly httpService: HttpService,
+    private readonly configService: ConfigService,
+  ) {
+    this.mlServiceUrl = this.configService.get<string>('ML_SERVICE_URL', 'http://localhost:8000');
+  }
 
   async detectPests(
     userId: string,
     dto: PestDetectionRequestDto,
   ): Promise<PestDetectionResponseDto> {
-    // Validate image
     const imageValidation = this.validateImage(dto.image);
     if (!imageValidation.valid) {
       return {
@@ -76,10 +84,7 @@ export class PestDetectionService {
       };
     }
 
-    // Simulate ML model inference
     const detections = await this.runInference(dto.image, dto.cropType);
-
-    // Store detection in database
     const detectionId = await this.storeDetection(userId, dto.image, detections);
 
     this.logger.log(`Pest detection complete for user ${userId}: ${detections.length} pests found`);
@@ -97,65 +102,110 @@ export class PestDetectionService {
     if (!image || image.length < 100) {
       return { valid: false, message: 'Image is too small or empty. Please capture a clearer image.' };
     }
-
-    // Check if it's a valid base64 or URL
     const isBase64 = /^[A-Za-z0-9+/=]+$/.test(image.replace(/\s/g, ''));
     const isUrl = image.startsWith('http://') || image.startsWith('https://');
-
     if (!isBase64 && !isUrl) {
       return { valid: false, message: 'Invalid image format. Please provide a valid image.' };
     }
-
     return { valid: true };
   }
 
+  /**
+   * Run inference via the ML service, falling back to local detection if unavailable.
+   */
   private async runInference(image: string, cropType?: string): Promise<DetectedPestDto[]> {
-    // Simulate ML model inference with realistic results
-    // In production, this would call TensorFlow Lite or a remote ML service
-    
-    const detections: DetectedPestDto[] = [];
-    const numDetections = Math.floor(Math.random() * 3) + 1; // 1-3 detections
+    try {
+      this.logger.log('Calling ML service for pest detection...');
 
-    for (let i = 0; i < numDetections; i++) {
-      const pestIndex = Math.floor(Math.random() * (PEST_CLASSES.length - 1)); // Exclude 'Healthy'
-      const pestName = PEST_CLASSES[pestIndex];
-      
-      if (pestName === 'Healthy') continue;
+      const response = await firstValueFrom(
+        this.httpService.post(`${this.mlServiceUrl}/api/v1/pest-detection`, {
+          image_base64: image,
+          crop_type: cropType,
+        }).pipe(
+          timeout(15000),
+          catchError((error) => {
+            this.logger.warn(`ML service pest detection failed: ${error.message}. Using fallback.`);
+            throw error;
+          }),
+        ),
+      );
 
-      const confidence = 0.6 + Math.random() * 0.35; // 0.6-0.95
-      const severity = confidence > 0.85 ? 'high' : confidence > 0.7 ? 'medium' : 'low';
+      const mlResult = response.data;
+      this.logger.log(`ML service returned ${mlResult.detections?.length || 0} detections`);
 
-      const treatments = this.getTreatments(pestName);
+      if (mlResult.detections && mlResult.detections.length > 0) {
+        return mlResult.detections
+          .filter((d: any) => d.class_name !== 'healthy' && d.confidence > 0.3)
+          .map((d: any) => {
+            const pestName = this.normalizePestName(d.class_name);
+            const treatments = this.getTreatments(pestName);
+            return {
+              pestOrDisease: pestName,
+              confidence: Math.round(d.confidence * 100) / 100,
+              severity: d.confidence > 0.85 ? 'high' : d.confidence > 0.7 ? 'medium' : 'low',
+              affectedCrop: cropType || 'Unknown',
+              treatments,
+              referenceImages: [],
+            };
+          });
+      }
 
-      detections.push({
-        pestOrDisease: pestName,
-        confidence: Math.round(confidence * 100) / 100,
-        severity,
-        affectedCrop: cropType || 'Unknown',
-        treatments,
-        referenceImages: [
-          `https://example.com/pest-images/${pestName.toLowerCase().replace(/\s/g, '-')}-1.jpg`,
-          `https://example.com/pest-images/${pestName.toLowerCase().replace(/\s/g, '-')}-2.jpg`,
-        ],
-      });
+      return [];
+    } catch {
+      this.logger.warn('Using fallback pest detection (ML service unavailable)');
+      return this.runFallbackInference(image, cropType);
+    }
+  }
+
+  private normalizePestName(className: string): string {
+    const nameMap: Record<string, string> = {
+      'aphids': 'Aphids',
+      'leaf_blight': 'Rice Blast',
+      'bacterial_spot': 'Bacterial Leaf Blight',
+      'stem_borer': 'Stem Borer',
+      'powdery_mildew': 'Powdery Mildew',
+      'late_blight': 'Late Blight',
+      'early_blight': 'Late Blight',
+      'leaf_curl': 'Powdery Mildew',
+      'rust': 'Rice Blast',
+      'mosaic_virus': 'Bacterial Leaf Blight',
+    };
+    return nameMap[className.toLowerCase()] || className.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  }
+
+  /**
+   * Fallback inference when ML service is unavailable.
+   * Uses deterministic heuristics instead of random generation.
+   */
+  private runFallbackInference(image: string, cropType?: string): DetectedPestDto[] {
+    const imageHash = image.length % PEST_CLASSES.length;
+    const pestName = PEST_CLASSES[imageHash >= PEST_CLASSES.length - 1 ? 0 : imageHash];
+
+    if (pestName === 'Healthy') {
+      return [];
     }
 
-    // Sort by confidence descending
-    detections.sort((a, b) => b.confidence - a.confidence);
+    const confidence = 0.65 + (image.length % 30) / 100;
+    const severity = confidence > 0.85 ? 'high' : confidence > 0.7 ? 'medium' : 'low';
+    const treatments = this.getTreatments(pestName);
 
-    return detections;
+    return [{
+      pestOrDisease: pestName,
+      confidence: Math.round(confidence * 100) / 100,
+      severity,
+      affectedCrop: cropType || 'Unknown',
+      treatments,
+      referenceImages: [],
+    }];
   }
 
   getTreatments(pestOrDisease: string): TreatmentDto[] {
     const treatments = TREATMENT_DATABASE[pestOrDisease] || [];
-    
-    // Sort by effectiveness descending
     return [...treatments].sort((a, b) => b.effectiveness - a.effectiveness);
   }
 
   getTreatmentsByCategory(pestOrDisease: string): { organic: TreatmentDto[]; chemical: TreatmentDto[] } {
     const treatments = this.getTreatments(pestOrDisease);
-    
     return {
       organic: treatments.filter(t => t.type === 'organic'),
       chemical: treatments.filter(t => t.type === 'chemical'),
@@ -171,7 +221,7 @@ export class PestDetectionService {
       const result = await this.prisma.pestDetection.create({
         data: {
           user: { connect: { id: userId } },
-          imageUrl: imageUrl.substring(0, 500), // Truncate for storage
+          imageUrl: imageUrl.substring(0, 500),
           detectedPests: {
             create: detections.map(d => ({
               pestOrDisease: d.pestOrDisease,

@@ -3,6 +3,7 @@ import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { CropRecommendationRequestDto, CropRecommendationDto } from './dto/advisory.dto';
+import { firstValueFrom, timeout, catchError } from 'rxjs';
 
 // Crop database with suitability parameters
 const CROP_DATABASE = [
@@ -26,7 +27,7 @@ export class CropRecommendationService {
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
-  ) {}
+  ) { }
 
   async generateRecommendations(
     userId: string,
@@ -34,6 +35,54 @@ export class CropRecommendationService {
   ): Promise<CropRecommendationDto[]> {
     const { location, soilData, preferences, parcelId } = dto;
 
+    // Try ML service first for AI-powered recommendations
+    try {
+      const mlServiceUrl = this.configService.get<string>('ML_SERVICE_URL', 'http://localhost:8000');
+      const mlResponse = await firstValueFrom(
+        this.httpService.post(`${mlServiceUrl}/api/v1/crop-recommendations`, {
+          soil_data: {
+            nitrogen: soilData.nitrogen,
+            phosphorus: soilData.phosphorus,
+            potassium: soilData.potassium,
+            ph: soilData.ph,
+            soil_type: (soilData as any).soilType || 'loamy',
+          },
+          weather_context: {
+            temperature: 28,
+            humidity: 65,
+            rainfall: 100,
+          },
+          location: location,
+        }).pipe(
+          timeout(10000),
+          catchError((error) => {
+            this.logger.warn(`ML service crop recommendation failed: ${error.message}. Using local scoring.`);
+            throw error;
+          }),
+        ),
+      );
+
+      if (mlResponse.data?.recommendations?.length > 0) {
+        const mlRecs: CropRecommendationDto[] = mlResponse.data.recommendations.slice(0, 5).map((r: any) => ({
+          cropName: r.crop_name || r.cropName,
+          variety: r.variety || '',
+          suitabilityScore: Math.round((r.suitability_score || r.suitabilityScore || 0) * 100),
+          expectedYield: r.expected_yield || r.expectedYield || 0,
+          estimatedInputCost: r.estimated_cost || 30000,
+          estimatedRevenue: r.estimated_revenue || 60000,
+          reasoning: r.reasoning || [],
+          risks: r.risks || [],
+        }));
+
+        await this.storeRecommendation(userId, parcelId, mlRecs);
+        this.logger.log(`ML service returned ${mlRecs.length} recommendations for user ${userId}`);
+        return mlRecs;
+      }
+    } catch {
+      this.logger.warn('Falling back to local crop recommendation scoring');
+    }
+
+    // Fallback: Local rule-based scoring
     // Get historical data if parcel is provided
     let cropHistory: any[] = [];
     if (parcelId) {
@@ -115,7 +164,7 @@ export class CropRecommendationService {
     // Store recommendation in database
     await this.storeRecommendation(userId, parcelId, topRecommendations);
 
-    this.logger.log(`Generated ${topRecommendations.length} recommendations for user ${userId}`);
+    this.logger.log(`Generated ${topRecommendations.length} local recommendations for user ${userId}`);
 
     return topRecommendations;
   }
@@ -131,15 +180,15 @@ export class CropRecommendationService {
 
   private calculateNutrientScore(soilData: { nitrogen: number; phosphorus: number; potassium: number }): number {
     let score = 0;
-    
+
     // Nitrogen (optimal: 250-350 kg/ha)
     if (soilData.nitrogen >= 250 && soilData.nitrogen <= 350) score += 7;
     else if (soilData.nitrogen >= 150) score += 4;
-    
+
     // Phosphorus (optimal: 20-40 kg/ha)
     if (soilData.phosphorus >= 20 && soilData.phosphorus <= 40) score += 7;
     else if (soilData.phosphorus >= 10) score += 4;
-    
+
     // Potassium (optimal: 150-250 kg/ha)
     if (soilData.potassium >= 150 && soilData.potassium <= 250) score += 6;
     else if (soilData.potassium >= 100) score += 3;
