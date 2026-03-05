@@ -16,102 +16,278 @@ from config import settings
 
 logger = logging.getLogger(__name__)
 
-# Common crop pests and diseases with treatments
+# Common crop pests and diseases with treatments (PlantVillage 38-class)
 PEST_DATABASE = {
+    # --- Apple ---
+    "apple_scab": {
+        "severity_threshold": {"low": 0.3, "medium": 0.6},
+        "treatments": [
+            Treatment(name="Captan Fungicide", description="Apply captan at petal fall", application_method="Foliar spray", frequency="Every 7-10 days"),
+            Treatment(name="Myclobutanil", description="Systemic fungicide for scab", application_method="Foliar spray", frequency="Every 10-14 days"),
+        ]
+    },
+    "apple_black_rot": {
+        "severity_threshold": {"low": 0.25, "medium": 0.5},
+        "treatments": [
+            Treatment(name="Captan", description="Apply captan fungicide", application_method="Foliar spray", frequency="Every 7-10 days"),
+            Treatment(name="Remove Mummies", description="Remove mummified fruit and cankers", application_method="Manual removal", frequency="During dormant season"),
+        ]
+    },
+    "apple_cedar_rust": {
+        "severity_threshold": {"low": 0.3, "medium": 0.55},
+        "treatments": [
+            Treatment(name="Myclobutanil", description="Apply systemic fungicide", application_method="Foliar spray", frequency="Every 7-10 days during spring"),
+            Treatment(name="Remove Juniper Hosts", description="Remove nearby juniper/cedar trees", application_method="Manual removal", frequency="Once"),
+        ]
+    },
+    "apple_healthy": {"severity_threshold": {"low": 1.0, "medium": 1.0}, "treatments": []},
+    # --- Blueberry ---
+    "blueberry_healthy": {"severity_threshold": {"low": 1.0, "medium": 1.0}, "treatments": []},
+    # --- Cherry ---
+    "cherry_powdery_mildew": {
+        "severity_threshold": {"low": 0.3, "medium": 0.55},
+        "treatments": [
+            Treatment(name="Sulfur Fungicide", description="Apply sulfur-based fungicide", application_method="Dust or spray", frequency="Every 7-10 days"),
+            Treatment(name="Neem Oil", description="Apply neem oil as organic alternative", application_method="Foliar spray", frequency="Every 7-14 days"),
+        ]
+    },
+    "cherry_healthy": {"severity_threshold": {"low": 1.0, "medium": 1.0}, "treatments": []},
+    # --- Corn ---
+    "corn_gray_leaf_spot": {
+        "severity_threshold": {"low": 0.25, "medium": 0.5},
+        "treatments": [
+            Treatment(name="Azoxystrobin", description="Apply strobilurin fungicide", application_method="Foliar spray", frequency="At VT/R1 growth stage"),
+            Treatment(name="Crop Rotation", description="Rotate with non-host crops", application_method="Cultural practice", frequency="Annually"),
+        ]
+    },
+    "corn_common_rust": {
+        "severity_threshold": {"low": 0.3, "medium": 0.55},
+        "treatments": [
+            Treatment(name="Propiconazole", description="Triazole fungicide", application_method="Foliar spray", frequency="When pustules appear"),
+            Treatment(name="Resistant Varieties", description="Plant rust-resistant hybrids", application_method="Cultural practice", frequency="At planting"),
+        ]
+    },
+    "corn_northern_leaf_blight": {
+        "severity_threshold": {"low": 0.25, "medium": 0.5},
+        "treatments": [
+            Treatment(name="Mancozeb", description="Apply mancozeb fungicide", application_method="Foliar spray", frequency="Every 7-10 days"),
+            Treatment(name="Tillage", description="Bury crop residue to reduce inoculum", application_method="Cultural practice", frequency="Post-harvest"),
+        ]
+    },
+    "corn_healthy": {"severity_threshold": {"low": 1.0, "medium": 1.0}, "treatments": []},
+    # --- Grape ---
+    "grape_black_rot": {
+        "severity_threshold": {"low": 0.25, "medium": 0.5},
+        "treatments": [
+            Treatment(name="Mancozeb", description="Apply mancozeb before bloom", application_method="Foliar spray", frequency="Every 7-10 days"),
+            Treatment(name="Myclobutanil", description="Apply systemic fungicide", application_method="Foliar spray", frequency="Every 10-14 days"),
+        ]
+    },
+    "grape_esca": {
+        "severity_threshold": {"low": 0.2, "medium": 0.45},
+        "treatments": [
+            Treatment(name="Wound Protection", description="Apply wound sealant after pruning", application_method="Direct application", frequency="After every pruning cut"),
+            Treatment(name="Sodium Arsenite", description="Trunk injection (where legal)", application_method="Injection", frequency="Once per season"),
+        ]
+    },
+    "grape_leaf_blight": {
+        "severity_threshold": {"low": 0.25, "medium": 0.5},
+        "treatments": [
+            Treatment(name="Copper Fungicide", description="Apply copper-based fungicide", application_method="Foliar spray", frequency="Every 7-14 days"),
+            Treatment(name="Remove Infected Leaves", description="Remove and destroy infected parts", application_method="Manual removal", frequency="Immediately"),
+        ]
+    },
+    "grape_healthy": {"severity_threshold": {"low": 1.0, "medium": 1.0}, "treatments": []},
+    # --- Orange ---
+    "orange_huanglongbing": {
+        "severity_threshold": {"low": 0.2, "medium": 0.4},
+        "treatments": [
+            Treatment(name="Psyllid Control", description="Apply imidacloprid for Asian citrus psyllid", application_method="Soil drench or foliar", frequency="Every 3-4 months"),
+            Treatment(name="Remove Infected Trees", description="Remove and destroy infected trees to prevent spread", application_method="Manual removal", frequency="Immediately upon confirmation"),
+        ]
+    },
+    # --- Peach ---
+    "peach_bacterial_spot": {
+        "severity_threshold": {"low": 0.25, "medium": 0.5},
+        "treatments": [
+            Treatment(name="Copper Hydroxide", description="Apply copper-based bactericide", application_method="Foliar spray", frequency="Every 7-10 days"),
+            Treatment(name="Oxytetracycline", description="Apply antibiotic spray", application_method="Foliar spray", frequency="Every 5-7 days during infection"),
+        ]
+    },
+    "peach_healthy": {"severity_threshold": {"low": 1.0, "medium": 1.0}, "treatments": []},
+    # --- Pepper ---
+    "pepper_bacterial_spot": {
+        "severity_threshold": {"low": 0.25, "medium": 0.5},
+        "treatments": [
+            Treatment(name="Copper Hydroxide", description="Apply copper-based bactericide", application_method="Foliar spray", frequency="Every 7-10 days"),
+            Treatment(name="Acibenzolar-S-methyl", description="Apply plant defense activator", application_method="Foliar spray", frequency="Every 14 days"),
+        ]
+    },
+    "pepper_healthy": {"severity_threshold": {"low": 1.0, "medium": 1.0}, "treatments": []},
+    # --- Potato ---
+    "potato_early_blight": {
+        "severity_threshold": {"low": 0.25, "medium": 0.5},
+        "treatments": [
+            Treatment(name="Mancozeb", description="Apply mancozeb fungicide", application_method="Foliar spray", frequency="Every 7-10 days"),
+            Treatment(name="Chlorothalonil", description="Apply chlorothalonil fungicide", application_method="Foliar spray", frequency="Every 7-14 days"),
+        ]
+    },
+    "potato_late_blight": {
+        "severity_threshold": {"low": 0.2, "medium": 0.45},
+        "treatments": [
+            Treatment(name="Metalaxyl", description="Apply metalaxyl-based fungicide", application_method="Foliar spray", frequency="Every 7 days"),
+            Treatment(name="Copper Oxychloride", description="Apply copper oxychloride", application_method="Foliar spray", frequency="Every 5-7 days during outbreak"),
+        ]
+    },
+    "potato_healthy": {"severity_threshold": {"low": 1.0, "medium": 1.0}, "treatments": []},
+    # --- Raspberry, Soybean ---
+    "raspberry_healthy": {"severity_threshold": {"low": 1.0, "medium": 1.0}, "treatments": []},
+    "soybean_healthy": {"severity_threshold": {"low": 1.0, "medium": 1.0}, "treatments": []},
+    # --- Squash ---
+    "squash_powdery_mildew": {
+        "severity_threshold": {"low": 0.3, "medium": 0.55},
+        "treatments": [
+            Treatment(name="Sulfur Fungicide", description="Apply sulfur-based fungicide", application_method="Dust or spray", frequency="Every 7-10 days"),
+            Treatment(name="Potassium Bicarbonate", description="Apply potassium bicarbonate solution", application_method="Foliar spray", frequency="Weekly"),
+        ]
+    },
+    # --- Strawberry ---
+    "strawberry_leaf_scorch": {
+        "severity_threshold": {"low": 0.3, "medium": 0.55},
+        "treatments": [
+            Treatment(name="Captan", description="Apply captan fungicide", application_method="Foliar spray", frequency="Every 7-10 days"),
+            Treatment(name="Remove Infected Leaves", description="Remove and destroy infected foliage", application_method="Manual removal", frequency="Regularly"),
+        ]
+    },
+    "strawberry_healthy": {"severity_threshold": {"low": 1.0, "medium": 1.0}, "treatments": []},
+    # --- Tomato ---
+    "tomato_bacterial_spot": {
+        "severity_threshold": {"low": 0.25, "medium": 0.5},
+        "treatments": [
+            Treatment(name="Copper Hydroxide", description="Apply copper-based bactericide", application_method="Foliar spray", frequency="Every 7-10 days"),
+            Treatment(name="Streptomycin", description="Apply streptomycin sulfate solution", application_method="Foliar spray", frequency="Every 5-7 days"),
+        ]
+    },
+    "tomato_early_blight": {
+        "severity_threshold": {"low": 0.25, "medium": 0.5},
+        "treatments": [
+            Treatment(name="Mancozeb", description="Apply mancozeb fungicide", application_method="Foliar spray", frequency="Every 7-10 days"),
+            Treatment(name="Chlorothalonil", description="Apply chlorothalonil fungicide", application_method="Foliar spray", frequency="Every 7-14 days"),
+        ]
+    },
+    "tomato_late_blight": {
+        "severity_threshold": {"low": 0.2, "medium": 0.45},
+        "treatments": [
+            Treatment(name="Metalaxyl", description="Apply metalaxyl-based fungicide", application_method="Foliar spray", frequency="Every 7 days"),
+            Treatment(name="Remove Infected Plants", description="Remove and destroy infected plants immediately", application_method="Manual removal", frequency="Immediately"),
+        ]
+    },
+    "tomato_leaf_mold": {
+        "severity_threshold": {"low": 0.3, "medium": 0.55},
+        "treatments": [
+            Treatment(name="Improve Ventilation", description="Increase air circulation in greenhouse", application_method="Cultural practice", frequency="Ongoing"),
+            Treatment(name="Chlorothalonil", description="Apply chlorothalonil fungicide", application_method="Foliar spray", frequency="Every 7-10 days"),
+        ]
+    },
+    "tomato_septoria_leaf_spot": {
+        "severity_threshold": {"low": 0.25, "medium": 0.5},
+        "treatments": [
+            Treatment(name="Mancozeb", description="Apply mancozeb fungicide", application_method="Foliar spray", frequency="Every 7-10 days"),
+            Treatment(name="Remove Lower Leaves", description="Remove infected lower leaves", application_method="Manual removal", frequency="Regularly"),
+        ]
+    },
+    "tomato_spider_mites": {
+        "severity_threshold": {"low": 0.3, "medium": 0.6},
+        "treatments": [
+            Treatment(name="Neem Oil", description="Apply neem oil to control mites", application_method="Foliar spray", frequency="Every 5-7 days"),
+            Treatment(name="Insecticidal Soap", description="Apply insecticidal soap", application_method="Direct spray", frequency="Every 3-5 days"),
+        ]
+    },
+    "tomato_target_spot": {
+        "severity_threshold": {"low": 0.25, "medium": 0.5},
+        "treatments": [
+            Treatment(name="Chlorothalonil", description="Apply chlorothalonil fungicide", application_method="Foliar spray", frequency="Every 7-10 days"),
+            Treatment(name="Azoxystrobin", description="Apply strobilurin fungicide", application_method="Foliar spray", frequency="Every 10-14 days"),
+        ]
+    },
+    "tomato_yellow_leaf_curl": {
+        "severity_threshold": {"low": 0.3, "medium": 0.55},
+        "treatments": [
+            Treatment(name="Imidacloprid", description="Control whitefly vectors with imidacloprid", application_method="Soil drench or foliar spray", frequency="Every 14-21 days"),
+            Treatment(name="Remove Infected Plants", description="Remove and destroy infected plants", application_method="Manual removal", frequency="Immediately"),
+        ]
+    },
+    "tomato_mosaic_virus": {
+        "severity_threshold": {"low": 0.3, "medium": 0.55},
+        "treatments": [
+            Treatment(name="Sanitize Tools", description="Disinfect tools with 10% bleach between plants", application_method="Preventive", frequency="Before each use"),
+            Treatment(name="Remove Infected Plants", description="Remove and destroy infected plants", application_method="Manual removal", frequency="Immediately"),
+        ]
+    },
+    "tomato_healthy": {"severity_threshold": {"low": 1.0, "medium": 1.0}, "treatments": []},
+    # --- Legacy labels (backward compatibility) ---
     "aphids": {
         "severity_threshold": {"low": 0.3, "medium": 0.6},
         "treatments": [
-            Treatment(name="Neem Oil Spray", description="Apply neem oil solution to affected areas", 
-                     application_method="Foliar spray", frequency="Every 7-10 days"),
-            Treatment(name="Insecticidal Soap", description="Use insecticidal soap for immediate control",
-                     application_method="Direct spray on insects", frequency="As needed")
+            Treatment(name="Neem Oil Spray", description="Apply neem oil solution", application_method="Foliar spray", frequency="Every 7-10 days"),
+            Treatment(name="Insecticidal Soap", description="Use insecticidal soap", application_method="Direct spray", frequency="As needed"),
         ]
     },
     "leaf_blight": {
         "severity_threshold": {"low": 0.25, "medium": 0.5},
         "treatments": [
-            Treatment(name="Copper Fungicide", description="Apply copper-based fungicide",
-                     application_method="Foliar spray", frequency="Every 7-14 days"),
-            Treatment(name="Remove Infected Leaves", description="Remove and destroy infected plant parts",
-                     application_method="Manual removal", frequency="Immediately upon detection")
+            Treatment(name="Copper Fungicide", description="Apply copper-based fungicide", application_method="Foliar spray", frequency="Every 7-14 days"),
         ]
     },
     "powdery_mildew": {
         "severity_threshold": {"low": 0.3, "medium": 0.55},
         "treatments": [
-            Treatment(name="Sulfur Fungicide", description="Apply sulfur-based fungicide",
-                     application_method="Dust or spray", frequency="Every 7-10 days"),
-            Treatment(name="Baking Soda Solution", description="Mix 1 tbsp baking soda per gallon of water",
-                     application_method="Foliar spray", frequency="Weekly")
+            Treatment(name="Sulfur Fungicide", description="Apply sulfur-based fungicide", application_method="Dust or spray", frequency="Every 7-10 days"),
         ]
     },
     "stem_borer": {
         "severity_threshold": {"low": 0.2, "medium": 0.45},
         "treatments": [
-            Treatment(name="Carbofuran Granules", description="Apply granules to soil around plant base",
-                     application_method="Soil application", frequency="At planting and 30 days after"),
-            Treatment(name="Trichogramma Release", description="Release egg parasitoids for biological control",
-                     application_method="Field release", frequency="2-3 releases per season")
+            Treatment(name="Carbofuran Granules", description="Apply granules to soil", application_method="Soil application", frequency="At planting"),
         ]
     },
     "bacterial_spot": {
         "severity_threshold": {"low": 0.25, "medium": 0.5},
         "treatments": [
-            Treatment(name="Copper Hydroxide", description="Apply copper-based bactericide",
-                     application_method="Foliar spray", frequency="Every 7-10 days"),
-            Treatment(name="Streptomycin", description="Apply streptomycin sulfate solution",
-                     application_method="Foliar spray", frequency="Every 5-7 days during infection")
+            Treatment(name="Copper Hydroxide", description="Apply copper-based bactericide", application_method="Foliar spray", frequency="Every 7-10 days"),
         ]
     },
     "early_blight": {
         "severity_threshold": {"low": 0.25, "medium": 0.5},
         "treatments": [
-            Treatment(name="Mancozeb", description="Apply mancozeb fungicide",
-                     application_method="Foliar spray", frequency="Every 7-10 days"),
-            Treatment(name="Chlorothalonil", description="Apply chlorothalonil fungicide",
-                     application_method="Foliar spray", frequency="Every 7-14 days")
+            Treatment(name="Mancozeb", description="Apply mancozeb fungicide", application_method="Foliar spray", frequency="Every 7-10 days"),
         ]
     },
     "late_blight": {
         "severity_threshold": {"low": 0.2, "medium": 0.45},
         "treatments": [
-            Treatment(name="Metalaxyl", description="Apply metalaxyl-based fungicide",
-                     application_method="Foliar spray", frequency="Every 7 days"),
-            Treatment(name="Copper Oxychloride", description="Apply copper oxychloride",
-                     application_method="Foliar spray", frequency="Every 5-7 days during outbreak")
+            Treatment(name="Metalaxyl", description="Apply metalaxyl-based fungicide", application_method="Foliar spray", frequency="Every 7 days"),
         ]
     },
     "leaf_curl": {
         "severity_threshold": {"low": 0.3, "medium": 0.55},
         "treatments": [
-            Treatment(name="Imidacloprid", description="Apply imidacloprid for vector control",
-                     application_method="Soil drench or foliar spray", frequency="Every 14-21 days"),
-            Treatment(name="Remove Infected Plants", description="Remove and destroy severely infected plants",
-                     application_method="Manual removal", frequency="As needed")
+            Treatment(name="Imidacloprid", description="Apply imidacloprid for vector control", application_method="Soil drench or foliar spray", frequency="Every 14-21 days"),
         ]
     },
     "mosaic_virus": {
         "severity_threshold": {"low": 0.3, "medium": 0.55},
         "treatments": [
-            Treatment(name="Vector Control", description="Control aphids and whiteflies that spread virus",
-                     application_method="Insecticide spray", frequency="Weekly during infestation"),
-            Treatment(name="Remove Infected Plants", description="Remove and destroy infected plants",
-                     application_method="Manual removal", frequency="Immediately upon detection")
+            Treatment(name="Vector Control", description="Control aphids and whiteflies", application_method="Insecticide spray", frequency="Weekly"),
         ]
     },
     "rust": {
         "severity_threshold": {"low": 0.25, "medium": 0.5},
         "treatments": [
-            Treatment(name="Propiconazole", description="Apply propiconazole fungicide",
-                     application_method="Foliar spray", frequency="Every 14 days"),
-            Treatment(name="Tebuconazole", description="Apply tebuconazole fungicide",
-                     application_method="Foliar spray", frequency="Every 14-21 days")
+            Treatment(name="Propiconazole", description="Apply propiconazole fungicide", application_method="Foliar spray", frequency="Every 14 days"),
         ]
     },
-    "healthy": {
-        "severity_threshold": {"low": 1.0, "medium": 1.0},
-        "treatments": []
-    }
+    "healthy": {"severity_threshold": {"low": 1.0, "medium": 1.0}, "treatments": []},
 }
 
 # Default class labels (used when model labels not available)
@@ -123,8 +299,26 @@ class PestDetectionService:
     
     def __init__(self):
         self.model_loader = get_model_loader()
-        self.target_size = (224, 224)  # MobileNetV2 input size
+        self._target_size = None  # Set dynamically from model
         self._class_labels = None
+    
+    @property
+    def target_size(self) -> tuple:
+        """Get target image size from model config or use default."""
+        if self._target_size is None:
+            # Try to read from model wrapper
+            model_data = self.model_loader.get_model("pest_detection")
+            if isinstance(model_data, dict) and 'image_size' in model_data:
+                self._target_size = tuple(model_data['image_size'])
+            else:
+                # Check model info metadata
+                model_info = self.model_loader.get_model_info("pest_detection")
+                if model_info and model_info.metadata.get("model_type") == "MobileNetV2_TransferLearning":
+                    self._target_size = (128, 128)  # v2 training config
+                else:
+                    self._target_size = (128, 128)  # Default for new models
+            logger.info(f"Using image target size: {self._target_size}")
+        return self._target_size
     
     @property
     def class_labels(self) -> List[str]:

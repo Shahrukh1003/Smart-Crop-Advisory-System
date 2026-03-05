@@ -41,7 +41,7 @@ export class CacheModule {
                 host,
                 port,
                 password: password || undefined,
-                retryStrategy: (times) => {
+                retryStrategy: (times: number) => {
                   if (times > 3) {
                     this.logger.warn('Redis connection failed after 3 retries, using in-memory fallback');
                     return null; // Stop retrying
@@ -56,9 +56,9 @@ export class CacheModule {
               // Test connection
               await redis.connect();
               await redis.ping();
-              
+
               this.logger.log(`Redis connected successfully at ${host}:${port}`);
-              
+
               return {
                 get: async (key: string) => redis.get(key),
                 set: async (key: string, value: string, options?: { EX?: number }) => {

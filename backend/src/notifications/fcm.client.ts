@@ -22,7 +22,7 @@ export class FCMClient implements OnModuleInit {
   private readonly logger = new Logger(FCMClient.name);
   private initialized = false;
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(private readonly configService: ConfigService) { }
 
   onModuleInit() {
     this.initializeFirebase();
@@ -143,8 +143,8 @@ export class FCMClient implements OnModuleInit {
       };
 
       const response = await admin.messaging().sendEachForMulticast(message);
-      
-      const results: FCMSendResult[] = response.responses.map((res, index) => ({
+
+      const results: FCMSendResult[] = response.responses.map((res: any, index: number) => ({
         success: res.success,
         messageId: res.messageId,
         error: res.error?.message,

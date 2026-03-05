@@ -5,19 +5,23 @@
 # =============================================================================
 
 # Build stage
-FROM node:18-alpine AS builder
+FROM node:20 AS builder
 
 WORKDIR /app
 
 # Install build dependencies
-RUN apk add --no-cache python3 make g++
+RUN apt-get update && apt-get install -y \
+    python3 \
+    make \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy package files
 COPY package*.json ./
 COPY prisma ./prisma/
 
 # Install dependencies
-RUN npm ci --legacy-peer-deps
+RUN npm install --legacy-peer-deps
 
 # Generate Prisma client
 RUN npx prisma generate
@@ -31,15 +35,14 @@ RUN npm run build
 # =============================================================================
 # Production Stage
 # =============================================================================
-FROM node:18-alpine
+FROM node:20-slim
 
 # Install runtime dependencies
-RUN apk add --no-cache \
+RUN apt-get update && apt-get install -y \
     openssl \
-    libc6-compat \
     wget \
     curl \
-    && rm -rf /var/cache/apk/*
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 

@@ -65,19 +65,44 @@ class ModelLoader:
             try:
                 import joblib
                 model = joblib.load(pkl_path)
-                model_info.model = model
-                logger.info(f"✅ Loaded pest detection model (sklearn) from {pkl_path}")
                 
-                # Get classes from model
-                if isinstance(model, dict) and 'classes' in model:
-                    self._pest_labels = {i: name for i, name in enumerate(model['classes'])}
-                    model_info.metadata["num_classes"] = len(model['classes'])
-                    model_info.metadata["classes"] = model['classes']
-                    model_info.metadata["model_type"] = model.get('feature_extractor', 'sklearn')
-                    logger.info(f"  Loaded {len(self._pest_labels)} pest classes")
+                # Check if this .pkl is a wrapper pointing to a Keras (.h5) model
+                if isinstance(model, dict) and model.get('model_type') == 'keras':
+                    h5_model_path = self.model_dir / "pest_detection_model.h5"
+                    if h5_model_path.exists():
+                        try:
+                            import tensorflow as tf
+                            keras_model = tf.keras.models.load_model(str(h5_model_path))
+                            model_info.model = keras_model
+                            logger.info(f"✅ Loaded pest detection model (Keras via wrapper) from {h5_model_path}")
+                        except Exception as e:
+                            logger.warning(f"⚠️ Failed to load Keras model from wrapper: {e}")
+                            model_info.model = None
+                    else:
+                        logger.warning(f"⚠️ Keras wrapper found but .h5 file missing")
+                        model_info.model = None
+                    
+                    # Load class info from wrapper
+                    if 'classes' in model:
+                        self._pest_labels = {i: name for i, name in enumerate(model['classes'])}
+                        model_info.metadata["num_classes"] = len(model['classes'])
+                        model_info.metadata["classes"] = model['classes']
+                        model_info.metadata["model_type"] = "MobileNetV2_TransferLearning"
+                        logger.info(f"  Loaded {len(self._pest_labels)} pest classes from Keras wrapper")
+                else:
+                    # Standard sklearn model
+                    model_info.model = model
+                    logger.info(f"✅ Loaded pest detection model (sklearn) from {pkl_path}")
+                    
+                    if isinstance(model, dict) and 'classes' in model:
+                        self._pest_labels = {i: name for i, name in enumerate(model['classes'])}
+                        model_info.metadata["num_classes"] = len(model['classes'])
+                        model_info.metadata["classes"] = model['classes']
+                        model_info.metadata["model_type"] = model.get('feature_extractor', 'sklearn')
+                        logger.info(f"  Loaded {len(self._pest_labels)} pest classes")
                 
             except Exception as e:
-                logger.warning(f"⚠️ Failed to load sklearn pest detection model: {e}")
+                logger.warning(f"⚠️ Failed to load pest detection model: {e}")
                 model_info.model = None
         
         # Try TensorFlow model if sklearn not found
