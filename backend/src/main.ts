@@ -26,10 +26,13 @@ async function bootstrap() {
 
   // Security
   app.use(helmet());
-  
+
   // Enable CORS for mobile app
+  const isProduction = process.env.NODE_ENV === 'production';
   app.enableCors({
-    origin: true, // Allow all origins for development
+    origin: isProduction
+      ? (process.env.CORS_ORIGINS || '').split(',').filter(Boolean)
+      : true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
     credentials: true,

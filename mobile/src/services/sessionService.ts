@@ -1,4 +1,4 @@
-import * as SecureStore from 'expo-secure-store';
+import storage from '../utils/storage';
 
 // Storage keys
 const SESSION_STATE_KEY = 'session_state';
@@ -55,20 +55,20 @@ class SessionService {
    */
   async restoreSession(): Promise<SessionStatus> {
     try {
-      const storedState = await SecureStore.getItemAsync(SESSION_STATE_KEY);
-      
+      const storedState = await storage.getItemAsync(SESSION_STATE_KEY);
+
       if (!storedState) {
         return this.getInvalidStatus();
       }
 
       this.sessionState = JSON.parse(storedState);
-      
+
       if (!this.sessionState) {
         return this.getInvalidStatus();
       }
 
       const status = this.getSessionStatus();
-      
+
       if (status.isValid && !status.isExpired) {
         // Session is valid, update activity and restart tracking
         await this.updateActivity();
@@ -146,10 +146,10 @@ class SessionService {
   async clearSession(): Promise<void> {
     this.stopActivityTracking();
     this.sessionState = null;
-    
+
     try {
-      await SecureStore.deleteItemAsync(SESSION_STATE_KEY);
-      await SecureStore.deleteItemAsync(LAST_ACTIVITY_KEY);
+      await storage.deleteItemAsync(SESSION_STATE_KEY);
+      await storage.deleteItemAsync(LAST_ACTIVITY_KEY);
     } catch (error) {
       console.error('Failed to clear session:', error);
     }
@@ -179,7 +179,7 @@ class SessionService {
     if (!this.sessionState) return;
 
     try {
-      await SecureStore.setItemAsync(
+      await storage.setItemAsync(
         SESSION_STATE_KEY,
         JSON.stringify(this.sessionState)
       );

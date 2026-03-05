@@ -1,5 +1,5 @@
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
-import * as SecureStore from 'expo-secure-store';
+import storage from '../utils/storage';
 import NetInfo from '@react-native-community/netinfo';
 
 declare const process: { env?: { EXPO_PUBLIC_API_URL?: string } } | undefined;
@@ -31,21 +31,21 @@ const getRetryDelay = (retryCount: number): number => {
 const isRetryableError = (error: AxiosError): boolean => {
   // Network errors
   if (!error.response) return true;
-  
+
   // Server errors (5xx)
   if (error.response.status >= 500) return true;
-  
+
   // Rate limiting (429)
   if (error.response.status === 429) return true;
-  
+
   // Request timeout
   if (error.code === 'ECONNABORTED') return true;
-  
+
   return false;
 };
 
 // Sleep utility
-const sleep = (ms: number): Promise<void> => 
+const sleep = (ms: number): Promise<void> =>
   new Promise(resolve => setTimeout(resolve, ms));
 
 // Request with retry logic
@@ -54,14 +54,14 @@ export const requestWithRetry = async <T>(
   retries: number = MAX_RETRIES
 ): Promise<AxiosResponse<T>> => {
   let lastError: AxiosError | null = null;
-  
+
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       const response = await api.request<T>(config);
       return response;
     } catch (error) {
       lastError = error as AxiosError;
-      
+
       if (attempt < retries && isRetryableError(lastError)) {
         const delay = getRetryDelay(attempt);
         console.log(`Request failed, retrying in ${delay}ms (attempt ${attempt + 1}/${retries})`);
@@ -71,7 +71,7 @@ export const requestWithRetry = async <T>(
       }
     }
   }
-  
+
   throw lastError;
 };
 
@@ -84,7 +84,7 @@ export const checkConnectivity = async (): Promise<boolean> => {
 // Request interceptor - add auth token
 api.interceptors.request.use(
   async (config) => {
-    const token = await SecureStore.getItemAsync('auth_token');
+    const token = await storage.getItemAsync('auth_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -103,15 +103,15 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        const refreshToken = await SecureStore.getItemAsync('refresh_token');
+        const refreshToken = await storage.getItemAsync('refresh_token');
         if (refreshToken) {
           const response = await axios.post(`${API_URL}/auth/refresh`, {
             refreshToken,
           });
 
           const { tokens } = response.data;
-          await SecureStore.setItemAsync('auth_token', tokens.accessToken);
-          await SecureStore.setItemAsync('refresh_token', tokens.refreshToken);
+          await storage.setItemAsync('auth_token', tokens.accessToken);
+          await storage.setItemAsync('refresh_token', tokens.refreshToken);
 
           if (originalRequest.headers) {
             originalRequest.headers.Authorization = `Bearer ${tokens.accessToken}`;
@@ -120,9 +120,9 @@ api.interceptors.response.use(
         }
       } catch {
         // Refresh failed, clear tokens
-        await SecureStore.deleteItemAsync('auth_token');
-        await SecureStore.deleteItemAsync('refresh_token');
-        await SecureStore.deleteItemAsync('user_data');
+        await storage.deleteItemAsync('auth_token');
+        await storage.deleteItemAsync('refresh_token');
+        await storage.deleteItemAsync('user_data');
       }
     }
 
@@ -134,13 +134,13 @@ api.interceptors.response.use(
 export const apiWithRetry = {
   get: <T>(url: string, config?: AxiosRequestConfig) =>
     requestWithRetry<T>({ ...config, method: 'GET', url }),
-  
+
   post: <T>(url: string, data?: any, config?: AxiosRequestConfig) =>
     requestWithRetry<T>({ ...config, method: 'POST', url, data }),
-  
+
   put: <T>(url: string, data?: any, config?: AxiosRequestConfig) =>
     requestWithRetry<T>({ ...config, method: 'PUT', url, data }),
-  
+
   delete: <T>(url: string, config?: AxiosRequestConfig) =>
     requestWithRetry<T>({ ...config, method: 'DELETE', url }),
 };

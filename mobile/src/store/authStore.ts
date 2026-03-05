@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import * as SecureStore from 'expo-secure-store';
+import storage from '../utils/storage';
 import { api } from '../services/api';
 import { errorService } from '../services/errorService';
 import { sessionService, SessionStatus } from '../services/sessionService';
@@ -68,9 +68,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const { user, tokens } = response.data;
 
       // Store tokens securely
-      await SecureStore.setItemAsync(TOKEN_KEY, tokens.accessToken);
-      await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, tokens.refreshToken);
-      await SecureStore.setItemAsync(USER_KEY, JSON.stringify(user));
+      await storage.setItemAsync(TOKEN_KEY, tokens.accessToken);
+      await storage.setItemAsync(REFRESH_TOKEN_KEY, tokens.refreshToken);
+      await storage.setItemAsync(USER_KEY, JSON.stringify(user));
 
       // Initialize session
       await sessionService.initSession(user.id);
@@ -88,10 +88,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch (error: any) {
       console.error('Login error:', error.message);
       console.error('Error details:', error.response?.data || error.code || 'Network error');
-      const message = error.response?.data?.message || 
-                      error.code === 'ECONNABORTED' ? 'Connection timeout - check your network' :
-                      error.message?.includes('Network') ? 'Network error - ensure your phone is on the same WiFi as the server' :
-                      'Login failed - ' + (error.message || 'Unknown error');
+      const message = error.response?.data?.message ||
+        error.code === 'ECONNABORTED' ? 'Connection timeout - check your network' :
+        error.message?.includes('Network') ? 'Network error - ensure your phone is on the same WiFi as the server' :
+          'Login failed - ' + (error.message || 'Unknown error');
       set({ error: message, isLoading: false });
       throw new Error(message);
     }
@@ -106,9 +106,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const { user, tokens } = response.data;
 
       // Store tokens securely
-      await SecureStore.setItemAsync(TOKEN_KEY, tokens.accessToken);
-      await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, tokens.refreshToken);
-      await SecureStore.setItemAsync(USER_KEY, JSON.stringify(user));
+      await storage.setItemAsync(TOKEN_KEY, tokens.accessToken);
+      await storage.setItemAsync(REFRESH_TOKEN_KEY, tokens.refreshToken);
+      await storage.setItemAsync(USER_KEY, JSON.stringify(user));
 
       // Initialize session
       await sessionService.initSession(user.id);
@@ -126,10 +126,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch (error: any) {
       console.error('Registration error:', error.message);
       console.error('Error details:', error.response?.data || error.code || 'Network error');
-      const message = error.response?.data?.message || 
-                      error.code === 'ECONNABORTED' ? 'Connection timeout - check your network' :
-                      error.message?.includes('Network') ? 'Network error - ensure your phone is on the same WiFi as the server' :
-                      'Registration failed - ' + (error.message || 'Unknown error');
+      const message = error.response?.data?.message ||
+        error.code === 'ECONNABORTED' ? 'Connection timeout - check your network' :
+        error.message?.includes('Network') ? 'Network error - ensure your phone is on the same WiFi as the server' :
+          'Registration failed - ' + (error.message || 'Unknown error');
       set({ error: message, isLoading: false });
       throw new Error(message);
     }
@@ -146,9 +146,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     await sessionService.clearSession();
 
     // Clear stored data
-    await SecureStore.deleteItemAsync(TOKEN_KEY);
-    await SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY);
-    await SecureStore.deleteItemAsync(USER_KEY);
+    await storage.deleteItemAsync(TOKEN_KEY);
+    await storage.deleteItemAsync(REFRESH_TOKEN_KEY);
+    await storage.deleteItemAsync(USER_KEY);
 
     // Clear API headers
     delete api.defaults.headers.common['Authorization'];
@@ -159,32 +159,32 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   loadStoredAuth: async () => {
     set({ isLoading: true });
     try {
-      const token = await SecureStore.getItemAsync(TOKEN_KEY);
-      const userData = await SecureStore.getItemAsync(USER_KEY);
+      const token = await storage.getItemAsync(TOKEN_KEY);
+      const userData = await storage.getItemAsync(USER_KEY);
 
       if (token && userData) {
         const user = JSON.parse(userData);
-        
+
         // Restore and check session
         const sessionStatus = await sessionService.restoreSession();
-        
+
         if (sessionStatus.isExpired) {
           // Session expired, clear auth and require re-login
-          await SecureStore.deleteItemAsync(TOKEN_KEY);
-          await SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY);
-          await SecureStore.deleteItemAsync(USER_KEY);
+          await storage.deleteItemAsync(TOKEN_KEY);
+          await storage.deleteItemAsync(REFRESH_TOKEN_KEY);
+          await storage.deleteItemAsync(USER_KEY);
           await sessionService.clearSession();
           set({ isLoading: false, sessionStatus });
           return;
         }
 
         api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        
+
         // Set error service language based on user preference
         if (user.language) {
           errorService.setLanguage(user.language);
         }
-        
+
         set({ user, isAuthenticated: true, isLoading: false, sessionStatus });
       } else {
         set({ isLoading: false });

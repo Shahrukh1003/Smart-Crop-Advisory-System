@@ -89,7 +89,7 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
     try {
       // Dynamic import to avoid initialization errors
       const Location = await import('expo-location');
-      
+
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         console.log('Location permission not granted');
@@ -164,7 +164,7 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
         const weatherRes = await api.get('/weather/forecast', {
           params: { latitude: lat, longitude: lng },
         });
-        
+
         if (weatherRes.data?.current) {
           setWeather({
             temperature: Math.round(weatherRes.data.current.temperature),
@@ -177,16 +177,16 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
 
           // Generate alerts from weather data
           const weatherAlerts: Alert[] = [];
-          
+
           if (weatherRes.data.alerts && weatherRes.data.alerts.length > 0) {
             weatherRes.data.alerts.forEach((alert: any, index: number) => {
               weatherAlerts.push({
                 id: `weather-${index}`,
                 type: 'weather',
                 title: alert.alertType === 'heavy_rain' ? '🌧️ Heavy Rain Alert' :
-                       alert.alertType === 'heat_wave' ? '🌡️ Heat Wave Warning' :
-                       alert.alertType === 'frost' ? '❄️ Frost Alert' :
-                       alert.alertType === 'storm' ? '💨 Storm Warning' : 'Weather Alert',
+                  alert.alertType === 'heat_wave' ? '🌡️ Heat Wave Warning' :
+                    alert.alertType === 'frost' ? '❄️ Frost Alert' :
+                      alert.alertType === 'storm' ? '💨 Storm Warning' : 'Weather Alert',
                 description: alert.description,
                 priority: alert.severity,
                 createdAt: new Date().toISOString(),
@@ -212,8 +212,8 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
               id: 'irrigation',
               type: 'broadcast',
               title: '💧 Irrigation Advisory',
-              description: weatherRes.data.irrigationRecommendation.action + ' - ' + 
-                          weatherRes.data.irrigationRecommendation.reason,
+              description: weatherRes.data.irrigationRecommendation.action + ' - ' +
+                weatherRes.data.irrigationRecommendation.reason,
               priority: 'low',
               createdAt: new Date().toISOString(),
             });
@@ -257,23 +257,62 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
     setVoiceResponse(null);
   };
 
+  const recordingRef = React.useRef<any>(null);
+
   const startVoiceRecording = async () => {
     try {
-      RNAlert.alert('Voice Recording', 'Voice recording feature coming soon. Please use text input for now.');
-      setIsRecording(false);
+      const { Audio } = await import('expo-av');
+      const { status } = await Audio.requestPermissionsAsync();
+      if (status !== 'granted') {
+        RNAlert.alert('Permission Required', 'Microphone permission is needed for voice commands.');
+        return;
+      }
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+      });
+      const { recording } = await Audio.Recording.createAsync(
+        Audio.RecordingOptionsPresets.HIGH_QUALITY
+      );
+      recordingRef.current = recording;
+      setIsRecording(true);
     } catch (error) {
       console.error('Error starting recording:', error);
       setIsRecording(false);
+      RNAlert.alert('Error', 'Could not start recording. Please use text input instead.');
     }
   };
 
   const stopVoiceRecording = async () => {
     setIsRecording(false);
+    if (!recordingRef.current) return;
+    try {
+      await recordingRef.current.stopAndUnloadAsync();
+      const uri = recordingRef.current.getURI();
+      recordingRef.current = null;
+      if (uri) {
+        setVoiceResponse('Processing your voice...');
+        const ExpoFileSystem = require('expo-file-system');
+        const base64Audio = await ExpoFileSystem.readAsStringAsync(uri, {
+          encoding: ExpoFileSystem.EncodingType.Base64,
+        });
+        const response = await api.post('/voice/command', {
+          audio: base64Audio,
+          language: selectedLanguage,
+          isText: false,
+        });
+        handleVoiceResult(response.data);
+      }
+    } catch (error) {
+      console.error('Error processing voice:', error);
+      setVoiceResponse('Sorry, voice processing failed. Please try text input.');
+      recordingRef.current = null;
+    }
   };
 
   const handleTextCommand = async () => {
     if (!textInput.trim()) return;
-    
+
     setVoiceResponse('Processing...');
     try {
       const response = await api.post('/voice/command', {
@@ -291,7 +330,7 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleVoiceResult = (result: VoiceCommandResult) => {
     setVoiceResponse(result.responseText);
-    
+
     // Navigate based on intent
     if (result.success && result.intent.confidence > 0.6) {
       setTimeout(() => {

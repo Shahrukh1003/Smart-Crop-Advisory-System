@@ -1,4 +1,4 @@
-import * as SecureStore from 'expo-secure-store';
+import storage from '../utils/storage';
 import { Platform } from 'react-native';
 
 // Storage keys
@@ -20,10 +20,6 @@ interface TokenData {
   expiresAt: number;
 }
 
-// Secure storage options
-const secureStoreOptions: SecureStore.SecureStoreOptions = {
-  keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
-};
 
 /**
  * Save tokens securely using device keychain/keystore
@@ -35,9 +31,9 @@ export const saveTokens = async (
   const expiresAt = Date.now() + ACCESS_TOKEN_EXPIRY;
 
   await Promise.all([
-    SecureStore.setItemAsync(STORAGE_KEYS.ACCESS_TOKEN, accessToken, secureStoreOptions),
-    SecureStore.setItemAsync(STORAGE_KEYS.REFRESH_TOKEN, refreshToken, secureStoreOptions),
-    SecureStore.setItemAsync(STORAGE_KEYS.TOKEN_EXPIRY, expiresAt.toString(), secureStoreOptions),
+    storage.setItemAsync(STORAGE_KEYS.ACCESS_TOKEN, accessToken),
+    storage.setItemAsync(STORAGE_KEYS.REFRESH_TOKEN, refreshToken),
+    storage.setItemAsync(STORAGE_KEYS.TOKEN_EXPIRY, expiresAt.toString()),
   ]);
 };
 
@@ -47,9 +43,9 @@ export const saveTokens = async (
 export const getTokens = async (): Promise<TokenData | null> => {
   try {
     const [accessToken, refreshToken, expiryStr] = await Promise.all([
-      SecureStore.getItemAsync(STORAGE_KEYS.ACCESS_TOKEN),
-      SecureStore.getItemAsync(STORAGE_KEYS.REFRESH_TOKEN),
-      SecureStore.getItemAsync(STORAGE_KEYS.TOKEN_EXPIRY),
+      storage.getItemAsync(STORAGE_KEYS.ACCESS_TOKEN),
+      storage.getItemAsync(STORAGE_KEYS.REFRESH_TOKEN),
+      storage.getItemAsync(STORAGE_KEYS.TOKEN_EXPIRY),
     ]);
 
     if (!accessToken || !refreshToken) {
@@ -71,7 +67,7 @@ export const getTokens = async (): Promise<TokenData | null> => {
  * Check if access token is expired
  */
 export const isTokenExpired = async (): Promise<boolean> => {
-  const expiryStr = await SecureStore.getItemAsync(STORAGE_KEYS.TOKEN_EXPIRY);
+  const expiryStr = await storage.getItemAsync(STORAGE_KEYS.TOKEN_EXPIRY);
   if (!expiryStr) return true;
 
   const expiresAt = parseInt(expiryStr, 10);
@@ -83,7 +79,7 @@ export const isTokenExpired = async (): Promise<boolean> => {
  * Check if refresh token is still valid
  */
 export const isRefreshTokenValid = async (): Promise<boolean> => {
-  const refreshToken = await SecureStore.getItemAsync(STORAGE_KEYS.REFRESH_TOKEN);
+  const refreshToken = await storage.getItemAsync(STORAGE_KEYS.REFRESH_TOKEN);
   if (!refreshToken) return false;
 
   // In a real app, you might want to decode the JWT and check its expiry
@@ -96,10 +92,10 @@ export const isRefreshTokenValid = async (): Promise<boolean> => {
  */
 export const clearTokens = async (): Promise<void> => {
   await Promise.all([
-    SecureStore.deleteItemAsync(STORAGE_KEYS.ACCESS_TOKEN),
-    SecureStore.deleteItemAsync(STORAGE_KEYS.REFRESH_TOKEN),
-    SecureStore.deleteItemAsync(STORAGE_KEYS.TOKEN_EXPIRY),
-    SecureStore.deleteItemAsync(STORAGE_KEYS.USER_DATA),
+    storage.deleteItemAsync(STORAGE_KEYS.ACCESS_TOKEN),
+    storage.deleteItemAsync(STORAGE_KEYS.REFRESH_TOKEN),
+    storage.deleteItemAsync(STORAGE_KEYS.TOKEN_EXPIRY),
+    storage.deleteItemAsync(STORAGE_KEYS.USER_DATA),
   ]);
 };
 
@@ -107,10 +103,9 @@ export const clearTokens = async (): Promise<void> => {
  * Save user data securely
  */
 export const saveUserData = async (userData: any): Promise<void> => {
-  await SecureStore.setItemAsync(
+  await storage.setItemAsync(
     STORAGE_KEYS.USER_DATA,
-    JSON.stringify(userData),
-    secureStoreOptions
+    JSON.stringify(userData)
   );
 };
 
@@ -119,7 +114,7 @@ export const saveUserData = async (userData: any): Promise<void> => {
  */
 export const getUserData = async (): Promise<any | null> => {
   try {
-    const data = await SecureStore.getItemAsync(STORAGE_KEYS.USER_DATA);
+    const data = await storage.getItemAsync(STORAGE_KEYS.USER_DATA);
     return data ? JSON.parse(data) : null;
   } catch (error) {
     console.error('Failed to get user data:', error);
@@ -168,8 +163,8 @@ export const refreshAccessToken = async (
  */
 export const isSecureStorageAvailable = async (): Promise<boolean> => {
   try {
-    await SecureStore.setItemAsync('__test__', 'test', secureStoreOptions);
-    await SecureStore.deleteItemAsync('__test__');
+    await storage.setItemAsync('__test__', 'test');
+    await storage.deleteItemAsync('__test__');
     return true;
   } catch {
     return false;

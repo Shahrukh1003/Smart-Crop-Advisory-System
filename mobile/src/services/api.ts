@@ -1,5 +1,5 @@
 import axios, { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
-import * as SecureStore from 'expo-secure-store';
+import storage from '../utils/storage';
 import Constants from 'expo-constants';
 
 // Use environment variable or fallback to localhost
@@ -24,7 +24,7 @@ export const api = axios.create({
 // Request interceptor
 api.interceptors.request.use(
   async (config: InternalAxiosRequestConfig): Promise<InternalAxiosRequestConfig> => {
-    const token = await SecureStore.getItemAsync('auth_token');
+    const token = await storage.getItemAsync('auth_token');
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -43,15 +43,15 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        const refreshToken = await SecureStore.getItemAsync('refresh_token');
+        const refreshToken = await storage.getItemAsync('refresh_token');
         if (refreshToken) {
           const response = await axios.post(`${API_URL}/auth/refresh`, {
             refreshToken,
           });
 
           const { tokens } = response.data;
-          await SecureStore.setItemAsync('auth_token', tokens.accessToken);
-          await SecureStore.setItemAsync('refresh_token', tokens.refreshToken);
+          await storage.setItemAsync('auth_token', tokens.accessToken);
+          await storage.setItemAsync('refresh_token', tokens.refreshToken);
 
           if (originalRequest.headers) {
             originalRequest.headers.Authorization = `Bearer ${tokens.accessToken}`;
@@ -60,9 +60,9 @@ api.interceptors.response.use(
         }
       } catch {
         // Refresh failed, logout user
-        await SecureStore.deleteItemAsync('auth_token');
-        await SecureStore.deleteItemAsync('refresh_token');
-        await SecureStore.deleteItemAsync('user_data');
+        await storage.deleteItemAsync('auth_token');
+        await storage.deleteItemAsync('refresh_token');
+        await storage.deleteItemAsync('user_data');
       }
     }
 
