@@ -56,8 +56,8 @@ COPY --from=builder /app/prisma ./prisma
 RUN mkdir -p /app/uploads && chmod 755 /app/uploads
 
 # Create non-root user for security
-RUN addgroup -g 1001 -S nodejs \
-    && adduser -S nestjs -u 1001 -G nodejs
+RUN groupadd -g 1001 nodejs \
+    && useradd -m -u 1001 -g nodejs -s /bin/sh nestjs
 
 # Set ownership
 RUN chown -R nestjs:nodejs /app

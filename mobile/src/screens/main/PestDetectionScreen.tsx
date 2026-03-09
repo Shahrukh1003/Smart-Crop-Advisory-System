@@ -88,15 +88,15 @@ export const PestDetectionScreen: React.FC = () => {
     }, 200);
 
     try {
-      const formData = new FormData();
-      formData.append('image', {
-        uri: image,
-        type: 'image/jpeg',
-        name: 'pest_image.jpg',
-      } as any);
+      // Read image as base64 — backend expects JSON { image: string }
+      const ExpoFileSystem = require('expo-file-system');
+      const base64Image = await ExpoFileSystem.readAsStringAsync(image, {
+        encoding: ExpoFileSystem.EncodingType.Base64,
+      });
 
-      const response = await api.post('/pest-detection/analyze', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+      const response = await api.post('/pest-detection/analyze', {
+        image: base64Image,
+        cropType: 'Unknown',
       });
 
       clearInterval(progressInterval);

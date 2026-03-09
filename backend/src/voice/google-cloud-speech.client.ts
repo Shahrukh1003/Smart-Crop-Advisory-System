@@ -76,7 +76,8 @@ export class GoogleCloudSpeechClient implements OnModuleInit {
   }
 
   private validateConfiguration(): boolean {
-    return !!(this.config.projectId && this.config.projectId !== 'your-project-id');
+    this.logger.log(`Validating config: Project ID = "${this.config.projectId}"`);
+    return !!(this.config.projectId && this.config.projectId !== 'your-project-id' && this.config.projectId !== '');
   }
 
   /**
@@ -173,7 +174,7 @@ export class GoogleCloudSpeechClient implements OnModuleInit {
     //   },
     // };
     // const [response] = await client.recognize(request);
-    
+
     // For now, simulate the response
     await this.delay(100);
     return {
@@ -207,7 +208,7 @@ export class GoogleCloudSpeechClient implements OnModuleInit {
     //   },
     // };
     // const [response] = await client.synthesizeSpeech(request);
-    
+
     // For now, simulate the response
     await this.delay(100);
     const audioContent = Buffer.from(`audio:${voiceModel.languageCode}:${text.substring(0, 50)}`).toString('base64');

@@ -297,7 +297,7 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
           encoding: ExpoFileSystem.EncodingType.Base64,
         });
         const response = await api.post('/voice/command', {
-          audio: base64Audio,
+          input: base64Audio,
           language: selectedLanguage,
           isText: false,
         });

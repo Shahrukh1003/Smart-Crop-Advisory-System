@@ -98,7 +98,7 @@ def build_model(num_classes):
         include_top=False,
         input_shape=(*CONFIG["image_size"], 3),
         include_preprocessing=True,
-        minimal_istic=False
+        minimalistic=False
     )
     base.trainable = False
 

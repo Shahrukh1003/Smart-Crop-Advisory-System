@@ -28,13 +28,15 @@
     "android": {
       "package": "com.smartcropadvisory.app",
       "versionCode": 1,
+      "usesCleartextTraffic": true,
       "permissions": [
         "CAMERA",
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
         "RECORD_AUDIO",
         "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE"
+        "WRITE_EXTERNAL_STORAGE",
+        "INTERNET"
       ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
@@ -58,6 +60,7 @@
       "expo-sqlite"
     ],
     "extra": {
+      "apiUrl": "http://192.168.29.196:3000/api/v1",
       "eas": {
         "projectId": "your-eas-project-id"
       }

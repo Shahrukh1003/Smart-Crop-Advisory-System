@@ -314,9 +314,9 @@ class PestDetectionService:
                 # Check model info metadata
                 model_info = self.model_loader.get_model_info("pest_detection")
                 if model_info and model_info.metadata.get("model_type") == "MobileNetV2_TransferLearning":
-                    self._target_size = (128, 128)  # v2 training config
+                    self._target_size = (224, 224)  # MobileNetV2 standard input size
                 else:
-                    self._target_size = (128, 128)  # Default for new models
+                    self._target_size = (224, 224)  # Default for Keras/H5 models
             logger.info(f"Using image target size: {self._target_size}")
         return self._target_size
     

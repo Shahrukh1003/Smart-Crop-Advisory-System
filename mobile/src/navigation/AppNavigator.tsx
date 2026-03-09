@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { ActivityIndicator, View, StyleSheet } from 'react-native';
+import { ActivityIndicator, View, Text, StyleSheet } from 'react-native';
 import { useAuthStore } from '../store/authStore';
 import { AuthNavigator } from './AuthNavigator';
 import { MainNavigator } from './MainNavigator';
@@ -19,7 +19,20 @@ export const AppNavigator: React.FC = () => {
   if (error) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2E7D32" />
+        <Text style={{ fontSize: 16, color: '#F44336', marginBottom: 12, textAlign: 'center' }}>
+          {error}
+        </Text>
+        <Text
+          style={{ fontSize: 14, color: '#2E7D32', fontWeight: '600' }}
+          onPress={() => {
+            setError(null);
+            loadStoredAuth().catch((err) => {
+              setError('Failed to initialize app');
+            });
+          }}
+        >
+          Tap to Retry
+        </Text>
       </View>
     );
   }
