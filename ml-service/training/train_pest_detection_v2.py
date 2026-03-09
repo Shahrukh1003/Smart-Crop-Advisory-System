@@ -28,12 +28,13 @@ MODELS_DIR = BASE_DIR / "models"
 # Training configuration
 CONFIG = {
     "image_size": (128, 128),
-    "batch_size": 32,
+    "batch_size": 8,
     "epochs_phase1": 15,
     "epochs_phase2": 10,
     "learning_rate": 0.001,
     "fine_tune_lr": 0.0001,
     "random_state": 42,
+    "data_percentage": 1.0, # Use 100% data now that we are using GPU
 }
 
 
@@ -44,14 +45,26 @@ def load_plantvillage():
 
     logger.info("Loading PlantVillage dataset via tensorflow_datasets...")
     logger.info("(This will download ~828 MB on first run)")
-
-    # Load with a train/test split
-    ds_train, ds_test = tfds.load(
-        'plant_village',
-        split=['train[:85%]', 'train[85%:]'],
-        as_supervised=True,
-        with_info=False,
-    )
+    
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            ds_train, ds_test = tfds.load(
+                'plant_village',
+                split=['train[:85%]', 'train[85%:]'],
+                as_supervised=True,
+                with_info=False,
+                download=True
+            )
+            break
+        except Exception as e:
+            if attempt < max_retries - 1:
+                logger.warning(f"Download attempt {attempt+1} failed: {e}. Retrying in 30s...")
+                import time
+                time.sleep(30)
+            else:
+                logger.error("All download attempts failed.")
+                raise e
 
     # Get info for label names
     info = tfds.builder('plant_village').info
@@ -131,10 +144,15 @@ def train(ds_train, ds_test, label_names, num_classes):
     bs = CONFIG["batch_size"]
 
     # Prepare datasets
+    num_train = ds_train.cardinality().numpy()
+    if CONFIG["data_percentage"] < 1.0:
+        take_train = int(num_train * CONFIG["data_percentage"])
+        logger.info(f"Limiting training data to {take_train} examples ({CONFIG['data_percentage']*100}%)")
+        ds_train = ds_train.shuffle(2000).take(take_train)
+
     train_ds = (
         ds_train
         .map(lambda img, lbl: preprocess(img, lbl, size), num_parallel_calls=tf.data.AUTOTUNE)
-        .cache()
         .map(augment, num_parallel_calls=tf.data.AUTOTUNE)
         .shuffle(2000)
         .batch(bs)
@@ -143,6 +161,10 @@ def train(ds_train, ds_test, label_names, num_classes):
 
     # Split test into val and test
     test_size = ds_test.cardinality().numpy()
+    if CONFIG["data_percentage"] < 1.0:
+        test_size = int(test_size * CONFIG["data_percentage"])
+        ds_test = ds_test.shuffle(1000).take(test_size)
+    
     val_size = test_size // 2
     val_ds = (
         ds_test.take(val_size)
@@ -295,7 +317,7 @@ def save_artifacts(model, label_names, metrics):
 
 def main():
     logger.info("=" * 60)
-    logger.info("Pest Detection — PlantVillage + MobileNetV2")
+    logger.info("Pest Detection — PlantVillage + MobileNetV3Large")
     logger.info("=" * 60)
 
     # Step 1: Load dataset

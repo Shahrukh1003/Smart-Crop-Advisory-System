@@ -15,11 +15,14 @@ RUN apt-get update && apt-get install -y \
     libffi-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for better caching
+# Copy requirements first
 COPY requirements.txt .
 
-# Install Python dependencies
-RUN pip install --no-cache-dir --user -r requirements.txt
+# Install heavy dependencies first for better caching and stability
+RUN pip install --no-cache-dir --user --default-timeout=1000 --retries=10 tensorflow==2.15.0 tensorflow-datasets==4.9.3
+
+# Install remaining dependencies from requirements.txt
+RUN pip install --no-cache-dir --user --default-timeout=1000 --retries=10 -r requirements.txt
 
 # =============================================================================
 # Production Stage
