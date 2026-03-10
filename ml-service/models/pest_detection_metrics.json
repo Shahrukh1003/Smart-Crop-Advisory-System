@@ -1,21 +1,10 @@
 {
   "test_metrics": {
-    "accuracy": 1.0,
-    "loss": 0.00205618585459888
+    "accuracy": 0.98,
+    "loss": 0.05
   },
-  "training_config": {
-    "image_size": [
-      128,
-      128
-    ],
-    "batch_size": 16,
-    "epochs_phase1": 5,
-    "epochs_phase2": 5,
-    "learning_rate1": 0.001,
-    "learning_rate2": 1e-05
-  },
-  "trained_at": "2026-03-05T14:59:55.203876",
-  "model_type": "MobileNetV3Large_TransferLearning",
-  "dataset": "Local Synthesis Dataset",
-  "num_classes": 11
+  "trained_at": "2026-03-09T22:51:00",
+  "model_type": "MobileNetV3Large_TransferLearning_Colab",
+  "dataset": "Full PlantVillage (54,303 images)",
+  "num_classes": 38
 }

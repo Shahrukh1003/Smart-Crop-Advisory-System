@@ -19,7 +19,7 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 
 # Install heavy dependencies first for better caching and stability
-RUN pip install --no-cache-dir --user --default-timeout=1000 --retries=10 tensorflow==2.15.0 tensorflow-datasets==4.9.3
+RUN pip install --no-cache-dir --user --default-timeout=1000 --retries=10 tensorflow==2.16.1 tensorflow-datasets==4.10.0
 
 # Install remaining dependencies from requirements.txt
 RUN pip install --no-cache-dir --user --default-timeout=1000 --retries=10 -r requirements.txt

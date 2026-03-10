@@ -306,18 +306,30 @@ class PestDetectionService:
     def target_size(self) -> tuple:
         """Get target image size from model config or use default."""
         if self._target_size is None:
-            # Try to read from model wrapper
-            model_data = self.model_loader.get_model("pest_detection")
-            if isinstance(model_data, dict) and 'image_size' in model_data:
-                self._target_size = tuple(model_data['image_size'])
-            else:
-                # Check model info metadata
-                model_info = self.model_loader.get_model_info("pest_detection")
-                if model_info and model_info.metadata.get("model_type") == "MobileNetV2_TransferLearning":
-                    self._target_size = (224, 224)  # MobileNetV2 standard input size
-                else:
-                    self._target_size = (224, 224)  # Default for Keras/H5 models
-            logger.info(f"Using image target size: {self._target_size}")
+            model_info = self.model_loader.get_model_info("pest_detection")
+            
+            # Try to get size from model metadata first
+            if model_info and "image_size" in model_info.metadata:
+                self._target_size = tuple(model_info.metadata["image_size"])
+            
+            # If not in metadata, try to extract from Keras model directly
+            if self._target_size is None and model_info and model_info.model is not None:
+                try:
+                    # Keras models have input_shape property
+                    shape = model_info.model.input_shape
+                    # Handle case where input_shape is a list (nested models)
+                    if isinstance(shape, list): shape = shape[0]
+                    # MobileNet usually has (None, height, width, 3)
+                    if len(shape) == 4:
+                        self._target_size = (shape[1], shape[2])
+                except Exception as e:
+                    logger.warning(f"Could not extract input shape from model: {e}")
+            
+            # Final fallback to standard size
+            if self._target_size is None:
+                self._target_size = (224, 224)
+                
+            logger.info(f"Target image size determined: {self._target_size}")
         return self._target_size
     
     @property

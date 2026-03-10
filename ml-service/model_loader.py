@@ -87,7 +87,8 @@ class ModelLoader:
                         self._pest_labels = {i: name for i, name in enumerate(model['classes'])}
                         model_info.metadata["num_classes"] = len(model['classes'])
                         model_info.metadata["classes"] = model['classes']
-                        model_info.metadata["model_type"] = "MobileNetV2_TransferLearning"
+                        model_info.metadata["image_size"] = model.get('image_size', (224, 224))
+                        model_info.metadata["model_type"] = model.get('feature_extractor', "MobileNetV2_TransferLearning")
                         logger.info(f"  Loaded {len(self._pest_labels)} pest classes from Keras wrapper")
                 else:
                     # Standard sklearn model
