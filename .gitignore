@@ -120,3 +120,10 @@ patent/
 # Exclude test/utility scripts at root
 TEST_SCRIPT.ps1
 test_api.ps1
+
+# Temporary files and logs
+debug_logs.txt
+full_ml_logs.txt
+health_response.json
+ml_logs.txt
+tail.txt
