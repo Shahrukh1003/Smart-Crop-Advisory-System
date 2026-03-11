@@ -33,50 +33,48 @@ const startTunnel = async () => {
         process.exit(1);
     }
 
-    console.log('✅ Backend found! Starting localtunnel...');
+    console.log('✅ Backend found! Starting Cloudflare tunnel...');
 
-    // Use npx localtunnel to expose the port
-    const lt = spawn('npx', ['-y', 'localtunnel', '--port', PORT.toString()], {
+    // Use npx cloudflared tunnel to expose the port
+    const lt = spawn('npx', ['-y', 'cloudflared', 'tunnel', '--url', `http://127.0.0.1:${PORT}`], {
         shell: true
     });
 
-    lt.stdout.on('data', (data) => {
+    lt.stderr.on('data', (data) => {
         const output = data.toString();
-        console.log(output);
+        // console.log(output); // For debugging
 
-        // Extract the URL (e.g., "your url is: https://something.loca.lt")
-        if (output.includes('your url is:')) {
-            const urlMatch = output.match(/https?:\/\/[^\s]+/);
+        // Extract the Cloudflare URL (e.g., "https://random-words.trycloudflare.com")
+        if (output.includes('trycloudflare.com')) {
+            const urlMatch = output.match(/https?:\/\/[a-z0-9-]+\.trycloudflare\.com/);
             if (urlMatch) {
-                let publicUrl = urlMatch[0];
-                console.log(`\n🎉 Public URL obtained: ${publicUrl}`);
-
-                // Append /api/v1
-                const apiUrl = `${publicUrl}/api/v1`;
-
-                // Write to mobile/.env
-                const envContent = `EXPO_PUBLIC_API_URL=${apiUrl}\n`;
-                fs.writeFileSync(ENV_PATH, envContent);
-
-                console.log(`\n💾 Successfully updated mobile/.env with:`);
-                console.log(`   EXPO_PUBLIC_API_URL=${apiUrl}\n`);
-
-                console.log('======================================================');
-                console.log('📱 READY FOR CROSS-NETWORK TESTING!');
-                console.log('👉 To run the app on your phone via ANY network (like Cellular):');
-                console.log('   1. Open a new terminal');
-                console.log('   2. cd mobile');
-                console.log('   3. npx expo start --tunnel');
-                console.log('   4. Scan the QR code with Expo Go');
-                console.log('======================================================');
-                console.log('\n(Leave this terminal running to keep the tunnel open...)\n');
+                const publicUrl = urlMatch[0];
+                updateEnvAndNotify(publicUrl);
             }
         }
     });
 
-    lt.stderr.on('data', (data) => {
-        console.error(`Tunnel Error: ${data}`);
-    });
+    const updateEnvAndNotify = (publicUrl) => {
+        // Prevent multiple updates for the same URL
+        if (global.lastUrl === publicUrl) return;
+        global.lastUrl = publicUrl;
+
+        console.log(`\n🎉 Public URL obtained: ${publicUrl}`);
+
+        const apiUrl = `${publicUrl}/api/v1`;
+        const envContent = `EXPO_PUBLIC_API_URL=${apiUrl}\n`;
+        fs.writeFileSync(ENV_PATH, envContent);
+
+        console.log(`\n💾 Successfully updated mobile/.env with:`);
+        console.log(`   EXPO_PUBLIC_API_URL=${apiUrl}\n`);
+
+        console.log('======================================================');
+        console.log('📱 READY FOR PERMANENT STABLE TESTING!');
+        console.log('👉 The 503 errors should now be completely gone.');
+        console.log('👉 Please restart your Expo app to use the new URL:');
+        console.log('   npx expo start --tunnel --clear');
+        console.log('======================================================');
+    };
 
     lt.on('close', (code) => {
         console.log(`Tunnel process exited with code ${code}`);

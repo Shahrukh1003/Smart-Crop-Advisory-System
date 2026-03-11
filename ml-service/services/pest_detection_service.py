@@ -360,9 +360,10 @@ class PestDetectionService:
                 
             image = image.resize(target, Image.Resampling.LANCZOS)
             
-            # Convert to numpy array and normalize
+            # Convert to numpy array 
+            # Note: The active Keras model expects MobileNetV2 style [-1, 1] normalization
             img_array = np.array(image, dtype=np.float32)
-            img_array = img_array / 255.0  # Normalize to [0, 1]
+            img_array = (img_array / 127.5) - 1.0  # Scale to [-1, 1]
             
             # Add batch dimension
             img_array = np.expand_dims(img_array, axis=0)
@@ -446,8 +447,12 @@ class PestDetectionService:
                     scaler = model_data['scaler']
                     classes = model_data.get('classes', [])
                     
+                    # Sklearn model features expect [0, 1] normalization
+                    # Convert [-1, 1] back to [0, 1]
+                    normalized_image = (preprocessed_image + 1.0) / 2.0
+                    
                     # Extract features for sklearn model
-                    features = self._extract_sklearn_features(preprocessed_image)
+                    features = self._extract_sklearn_features(normalized_image)
                     features_scaled = scaler.transform(features)
                     
                     # Get probabilities
@@ -494,7 +499,8 @@ class PestDetectionService:
     
     def _run_fallback_detection(self, preprocessed_image: np.ndarray) -> List[Tuple[str, float]]:
         """Fallback detection using simple image analysis."""
-        img = preprocessed_image[0]  # Remove batch dimension
+        # Convert [-1, 1] back to [0, 1]
+        img = (preprocessed_image[0] + 1.0) / 2.0
         
         # Calculate mean color values
         mean_colors = np.mean(img, axis=(0, 1))
