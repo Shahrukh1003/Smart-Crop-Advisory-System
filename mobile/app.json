@@ -60,7 +60,6 @@
       "expo-sqlite"
     ],
     "extra": {
-      "apiUrl": "http://192.168.29.196:3000/api/v1",
       "eas": {
         "projectId": "your-eas-project-id"
       }

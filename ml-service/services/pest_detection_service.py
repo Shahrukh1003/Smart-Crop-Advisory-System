@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 # Common crop pests and diseases with treatments (PlantVillage 38-class)
 PEST_DATABASE = {
     # --- Apple ---
-    "apple_scab": {
+    "apple_apple_scab": {
         "severity_threshold": {"low": 0.3, "medium": 0.6},
         "treatments": [
             Treatment(name="Captan Fungicide", description="Apply captan at petal fall", application_method="Foliar spray", frequency="Every 7-10 days"),
@@ -33,7 +33,7 @@ PEST_DATABASE = {
             Treatment(name="Remove Mummies", description="Remove mummified fruit and cankers", application_method="Manual removal", frequency="During dormant season"),
         ]
     },
-    "apple_cedar_rust": {
+    "apple_cedar_apple_rust": {
         "severity_threshold": {"low": 0.3, "medium": 0.55},
         "treatments": [
             Treatment(name="Myclobutanil", description="Apply systemic fungicide", application_method="Foliar spray", frequency="Every 7-10 days during spring"),
@@ -53,7 +53,7 @@ PEST_DATABASE = {
     },
     "cherry_healthy": {"severity_threshold": {"low": 1.0, "medium": 1.0}, "treatments": []},
     # --- Corn ---
-    "corn_gray_leaf_spot": {
+    "corn_cercospora_leaf_spot_gray_leaf_spot": {
         "severity_threshold": {"low": 0.25, "medium": 0.5},
         "treatments": [
             Treatment(name="Azoxystrobin", description="Apply strobilurin fungicide", application_method="Foliar spray", frequency="At VT/R1 growth stage"),
@@ -83,14 +83,14 @@ PEST_DATABASE = {
             Treatment(name="Myclobutanil", description="Apply systemic fungicide", application_method="Foliar spray", frequency="Every 10-14 days"),
         ]
     },
-    "grape_esca": {
+    "grape_esca_(black_measles)": {
         "severity_threshold": {"low": 0.2, "medium": 0.45},
         "treatments": [
             Treatment(name="Wound Protection", description="Apply wound sealant after pruning", application_method="Direct application", frequency="After every pruning cut"),
             Treatment(name="Sodium Arsenite", description="Trunk injection (where legal)", application_method="Injection", frequency="Once per season"),
         ]
     },
-    "grape_leaf_blight": {
+    "grape_leaf_blight_(isariopsis_leaf_spot)": {
         "severity_threshold": {"low": 0.25, "medium": 0.5},
         "treatments": [
             Treatment(name="Copper Fungicide", description="Apply copper-based fungicide", application_method="Foliar spray", frequency="Every 7-14 days"),
@@ -99,7 +99,7 @@ PEST_DATABASE = {
     },
     "grape_healthy": {"severity_threshold": {"low": 1.0, "medium": 1.0}, "treatments": []},
     # --- Orange ---
-    "orange_huanglongbing": {
+    "orange_haunglongbing_(citrus_greening)": {
         "severity_threshold": {"low": 0.2, "medium": 0.4},
         "treatments": [
             Treatment(name="Psyllid Control", description="Apply imidacloprid for Asian citrus psyllid", application_method="Soil drench or foliar", frequency="Every 3-4 months"),
@@ -196,7 +196,7 @@ PEST_DATABASE = {
             Treatment(name="Remove Lower Leaves", description="Remove infected lower leaves", application_method="Manual removal", frequency="Regularly"),
         ]
     },
-    "tomato_spider_mites": {
+    "tomato_spider_mites_two_spotted_spider_mite": {
         "severity_threshold": {"low": 0.3, "medium": 0.6},
         "treatments": [
             Treatment(name="Neem Oil", description="Apply neem oil to control mites", application_method="Foliar spray", frequency="Every 5-7 days"),
@@ -210,14 +210,14 @@ PEST_DATABASE = {
             Treatment(name="Azoxystrobin", description="Apply strobilurin fungicide", application_method="Foliar spray", frequency="Every 10-14 days"),
         ]
     },
-    "tomato_yellow_leaf_curl": {
+    "tomato_tomato_yellow_leaf_curl_virus": {
         "severity_threshold": {"low": 0.3, "medium": 0.55},
         "treatments": [
             Treatment(name="Imidacloprid", description="Control whitefly vectors with imidacloprid", application_method="Soil drench or foliar spray", frequency="Every 14-21 days"),
             Treatment(name="Remove Infected Plants", description="Remove and destroy infected plants", application_method="Manual removal", frequency="Immediately"),
         ]
     },
-    "tomato_mosaic_virus": {
+    "tomato_tomato_mosaic_virus": {
         "severity_threshold": {"low": 0.3, "medium": 0.55},
         "treatments": [
             Treatment(name="Sanitize Tools", description="Disinfect tools with 10% bleach between plants", application_method="Preventive", frequency="Before each use"),
@@ -344,24 +344,33 @@ class PestDetectionService:
         return self._class_labels
     
     def preprocess_image(self, image_bytes: bytes) -> np.ndarray:
-        """Preprocess image for model inference."""
-        image = Image.open(io.BytesIO(image_bytes))
-        
-        # Convert to RGB if necessary
-        if image.mode != 'RGB':
-            image = image.convert('RGB')
-        
-        # Resize to target size
-        image = image.resize(self.target_size, Image.Resampling.LANCZOS)
-        
-        # Convert to numpy array and normalize
-        img_array = np.array(image, dtype=np.float32)
-        img_array = img_array / 255.0  # Normalize to [0, 1]
-        
-        # Add batch dimension
-        img_array = np.expand_dims(img_array, axis=0)
-        
-        return img_array
+        """Preprocess image for model inference with error handling."""
+        try:
+            image = Image.open(io.BytesIO(image_bytes))
+            
+            # Convert to RGB if necessary
+            if image.mode != 'RGB':
+                image = image.convert('RGB')
+            
+            # Resize to target size
+            target = self.target_size
+            if not isinstance(target, tuple) or len(target) != 2:
+                logger.warning(f"Invalid target size {target}, falling back to (224, 224)")
+                target = (224, 224)
+                
+            image = image.resize(target, Image.Resampling.LANCZOS)
+            
+            # Convert to numpy array and normalize
+            img_array = np.array(image, dtype=np.float32)
+            img_array = img_array / 255.0  # Normalize to [0, 1]
+            
+            # Add batch dimension
+            img_array = np.expand_dims(img_array, axis=0)
+            
+            return img_array
+        except Exception as e:
+            logger.error(f"Image preprocessing failed: {e}")
+            raise ValueError(f"Invalid image format or corrupted data: {e}")
     
     def _get_severity(self, confidence: float, pest_type: str) -> Severity:
         """Determine severity based on confidence and pest type."""
@@ -459,7 +468,9 @@ class PestDetectionService:
                 
                 # Handle TensorFlow/Keras model
                 else:
-                    predictions = model_data.predict(preprocessed_image, verbose=0)
+                    # Using calling syntax with training=False is much faster than .predict() for single images
+                    predictions = model_data(preprocessed_image, training=False)
+                    predictions = predictions.numpy() if hasattr(predictions, 'numpy') else np.array(predictions)
                     top_indices = np.argsort(predictions[0])[::-1][:5]
                     results = []
                     
@@ -476,6 +487,8 @@ class PestDetectionService:
                 
             except Exception as e:
                 logger.error(f"Model inference failed: {e}")
+                import traceback
+                logger.error(traceback.format_exc())
                 return []
         return []
     
@@ -512,16 +525,35 @@ class PestDetectionService:
         start_time = time.time()
         detection_id = str(uuid.uuid4())
         
-        # Preprocess image
-        preprocessed = self.preprocess_image(image_bytes)
-        
-        # Try model inference first
-        model_info = self.model_loader.get_model_info("pest_detection")
-        model_version = model_info.version if model_info else "fallback"
-        is_fallback = False
-        fallback_disclaimer = None
-        
-        predictions = self._run_model_inference(preprocessed)
+        try:
+            # Preprocess image
+            preprocessed = self.preprocess_image(image_bytes)
+            
+            # Try model inference first
+            model_info = self.model_loader.get_model_info("pest_detection")
+            model_version = model_info.version if model_info else "fallback"
+            is_fallback = False
+            fallback_disclaimer = None
+            
+            predictions = self._run_model_inference(preprocessed)
+            
+        except ValueError as e:
+            # Return a clear error response if preprocessing fails
+            processing_time = (time.time() - start_time) * 1000
+            error_det = PestDetection(
+                pest_or_disease="Error: Invalid Image",
+                confidence=1.0,
+                severity=Severity.LOW,
+                treatments=[Treatment(name="Upload Error", description=str(e), application_method="System", frequency="N/A")]
+            )
+            return PestDetectionResponse(
+                detection_id=detection_id,
+                detections=[error_det],
+                processing_time_ms=round(processing_time, 2),
+                model_version="error",
+                is_fallback=True,
+                fallback_disclaimer="Image preprocessing failed."
+            )
         
         if not predictions:
             # Fall back to rule-based detection

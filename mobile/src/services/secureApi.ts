@@ -45,6 +45,8 @@ export const createSecureApi = (): AxiosInstance => {
       'Accept': 'application/json',
       'X-Platform': Platform.OS,
       'X-App-Version': '1.0.0',
+      'ngrok-skip-browser-warning': 'true',
+      'Bypass-Tunnel-Reminder': 'true',
     },
     // Force HTTPS
     ...(API_URL.startsWith('https') ? {} : { baseURL: API_URL.replace('http://', 'https://') }),
@@ -53,11 +55,11 @@ export const createSecureApi = (): AxiosInstance => {
   // Request interceptor - add auth token
   instance.interceptors.request.use(
     async (config) => {
-      const authHeader = await getAuthHeader();
-      config.headers = {
-        ...config.headers,
-        ...authHeader,
-      };
+      const authHeader = (await getAuthHeader()) as Record<string, string>;
+      // Safely assign properties instead of overriding the entire strict Axios object
+      if (authHeader && authHeader.Authorization) {
+        config.headers.set('Authorization', authHeader.Authorization);
+      }
       return config;
     },
     (error) => Promise.reject(error)

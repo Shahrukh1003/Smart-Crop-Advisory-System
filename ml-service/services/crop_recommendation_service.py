@@ -160,19 +160,20 @@ class CropRecommendationService:
         self._feature_cols = ['N', 'P', 'K', 'temperature', 'humidity', 'ph', 'rainfall']
     
     def _extract_features(self, request: CropRecommendationRequest) -> np.ndarray:
-        """Extract features from request for model inference."""
+        """Extract features from request for model inference, mapping to physical constraints."""
         soil = request.soil_data
         weather = request.weather_context or WeatherContext()
         
-        features = [
-            soil.nitrogen,
-            soil.phosphorus,
-            soil.potassium,
-            weather.temperature or 25.0,
-            weather.humidity or 60.0,
-            soil.ph,
-            weather.rainfall or 100.0
-        ]
+        # Enforce realistic constraints to prevent model hallucination on extreme outliers
+        n = max(0.0, min(float(soil.nitrogen), 300.0))
+        p = max(0.0, min(float(soil.phosphorus), 150.0))
+        k = max(0.0, min(float(soil.potassium), 300.0))
+        temp = max(-10.0, min(float(weather.temperature or 25.0), 60.0))
+        hum = max(0.0, min(float(weather.humidity or 60.0), 100.0))
+        ph = max(0.0, min(float(soil.ph), 14.0))
+        rain = max(0.0, min(float(weather.rainfall or 100.0), 1000.0))
+        
+        features = [n, p, k, temp, hum, ph, rain]
         
         return np.array([features], dtype=np.float32)
     
@@ -305,6 +306,8 @@ class CropRecommendationService:
                 
             except Exception as e:
                 logger.error(f"Model inference failed: {e}")
+                import traceback
+                logger.error(traceback.format_exc())
                 return None
         return None
     
